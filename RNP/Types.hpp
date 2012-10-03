@@ -8,6 +8,27 @@
 
 namespace RNP{
 
+enum Trans{
+	NoTranspose = 'N',
+	Transpose = 'T',
+	ConjugateTranspose = 'C'
+};
+
+enum Uplo{
+	Lower = 'L',
+	Upper = 'U'
+};
+
+enum Side{
+	Left = 'L',
+	Right = 'R'
+};
+
+enum Diag{
+	Unit = 'U',
+	NonUnit = 'N'
+};
+
 namespace TBLAS{ class Kernel; }
 
 // Base class for numeric traits
@@ -44,7 +65,7 @@ template<typename _Real> struct Traits<std::complex<_Real> >
 	static inline Real epsilon(){ return std::numeric_limits<_Real>::epsilon(); }
 	static inline Real maximum(){ return std::numeric_limits<_Real>::max(); }
 	static inline Real abs(const Complex &val){ return std::abs(val); }
-	static inline Real norm1(const Complex&val){ return std::abs(val); }
+	static inline Real norm1(const Complex&val){ return std::abs(std::real(val)) + std::abs(std::imag(val)); }
 	static inline Real real(const Complex &val){ return std::real(val); }
 	static inline Real imag(const Complex &val){ return std::imag(val); }
 	static inline Complex conj(const Complex &val){ return std::conj(val); }
@@ -52,9 +73,9 @@ template<typename _Real> struct Traits<std::complex<_Real> >
 };
 
 class Base{
-	unsigned int flags;
 	mutable bool valid;
 protected:
+	unsigned int flags;
 	void Invalidate() const{ valid = false; }
 	bool IsValid() const{ return valid; }
 public:
@@ -80,7 +101,7 @@ public:
 	}
 	T* ptr() const{ return x; }
 	size_t size() const{ return n; }
-	size_t inc()  const{ return inc; }
+	size_t incr()  const{ return inc; }
 	
 	void Fill(const T &value){
 		size_t i = n;
@@ -119,6 +140,27 @@ public:
 	size_t cols() const{ return n; }
 	size_t ldim() const{ return lda; }
 	
+	Matrix<T>& operator=(const Matrix<T> &A){
+		RNPAssert(A.rows() == m);
+		RNPAssert(A.cols() == n);
+		if(A.ldim() == lda && lda == m){ // copy entire array at once
+		}else{ // copy by column
+		}
+		return *this;
+	}
+	
+	template <typename U>
+	Matrix<T>& operator=(const Matrix<U> &A){
+		RNPAssert(A.rows() == m);
+		RNPAssert(A.cols() == n);
+		for(size_t j = 0; j < n; ++j){
+			for(size_t i = 0; i < m; ++i){
+				a[i+j*lda] = (T)A(i,j);
+			}
+		}
+		return *this;
+	}
+	
 	enum Part{
 		BelowDiagonal = 1,
 		AboveDiagonal = 2,
@@ -140,7 +182,7 @@ public:
 	void Zero(){
 		Fill(All, 0);
 	}
-	void Identity(const T &value){
+	void Identity(){
 		for(size_t j = 0; j < n; ++j){
 			for(size_t i = 0; i < m; ++i){
 				if(i == j){

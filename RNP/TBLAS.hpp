@@ -142,34 +142,36 @@ size_t MaximumIndex(const Vector<T> &x){
 
 //// Level 2
 
-enum Trans{
-	NoTranspose = 'N',
-	Transpose = 'T',
-	ConjugateTranspose = 'C'
-};
-
-enum Uplo{
-	Lower = 'L',
-	Upper = 'U'
-};
-
-enum Side{
-	Left = 'L',
-	Right = 'R'
-};
-
-enum Diag{
-	Unit = 'U',
-	NonUnit = 'N'
-};
-
 template <typename A, typename B, typename T>
 void Mult(Trans trans, const A &alpha, const Matrix<T> &a, const Vector<T> &x, const B &beta, Vector<T> &y){
 	RNPAssert(
 		NoTranspose == trans && (a.rows() == y.size()) && (a.cols() == x.size())
 	||	NoTranspose != trans && (a.rows() == x.size()) && (a.cols() == y.size())
 	);
-	Kernel::MultMV(trans, alpha, a.a, a.lda, x.x, x.inc, beta, y.x, y.inc);
+	Kernel K;
+	K.MultMV(trans, alpha, a.ptr(), a.ldim(), x.ptr(), x.incr(), beta, y.ptr(), y.incr());
+}
+template <typename A, typename B, typename T>
+void Mult(Trans transa, Trans transb, const A &alpha, const Matrix<T> &a, const Matrix<T> &b, const B &beta, Matrix<T> &c){
+	size_t m, n, k;
+	if(transa == NoTranspose){
+		m = a.rows();
+		k = a.cols();
+	}else{
+		m = a.cols();
+		k = a.rows();
+	}
+	RNPAssert(m == c.rows());
+	if(transb == NoTranspose){
+		n = b.cols();
+		RNPAssert(k == b.rows());
+	}else{
+		n = b.rows();
+		RNPAssert(k == b.cols());
+	}
+	RNPAssert(n == c.cols());
+	Kernel K;
+	K.MultMM(transa, transb, m, n, k, alpha, a.ptr(), a.ldim(), b.ptr(), b.ldim(), beta, c.ptr(), c.ldim());
 }
 
 /*

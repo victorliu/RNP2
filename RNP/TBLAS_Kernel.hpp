@@ -15,11 +15,13 @@ class Kernel{
 	size_t np;
 public:
 	Kernel():p(NULL),np(0){}
+	~Kernel(){ free(p); np = 0; }
 	void BufferFreeAll(){ np = 0; }
 	template <typename T>
 	void BufferAdd(size_t n, T **x){
-		size_t newsize = sizeof(T) * n;
-		
+		size_t addsize = sizeof(T) * n;
+		p = realloc(p, np + addsize);
+		np += addsize;
 	}
 
 template <class TV, class T>
@@ -98,8 +100,8 @@ static T ConjugateDot(size_t n, const T *x, size_t incx, const T *y, size_t incy
 }
 
 template <class T>
-static typename RNP::Traits<T>::real_type Norm2(size_t n, const T *x, size_t incx){
-	typedef typename RNP::Traits<T>::real_type real_type;
+static typename RNP::Traits<T>::Real Norm2(size_t n, const T *x, size_t incx){
+	typedef typename RNP::Traits<T>::Real real_type;
 	using namespace std;
 	real_type ssq(1), scale(0);
 	while(n --> 0){
@@ -132,8 +134,8 @@ static typename RNP::Traits<T>::real_type Norm2(size_t n, const T *x, size_t inc
 }
 
 template <class T>
-static typename RNP::Traits<T>::real_type Asum(size_t n, const T *x, size_t incx){
-	typedef typename RNP::Traits<T>::real_type real_type;
+static typename RNP::Traits<T>::Real Asum(size_t n, const T *x, size_t incx){
+	typedef typename RNP::Traits<T>::Real real_type;
 	real_type sum(0);
 	while(n --> 0){
 		sum += RNP::Traits<T>::abs1(*x);
@@ -145,12 +147,12 @@ static typename RNP::Traits<T>::real_type Asum(size_t n, const T *x, size_t incx
 template <class T>
 static size_t MaximumIndex(size_t n, const T *x, size_t incx){
 	if(n < 1){ return 0; }
-	typedef typename RNP::Traits<T>::real_type real_type;
-	real_type mv = RNP::Traits<T>::abs1(*x);
+	typedef typename RNP::Traits<T>::Real real_type;
+	real_type mv = RNP::Traits<T>::norm1(*x);
 	size_t mi = 0;
 	for(size_t i = 1; i < n; ++i){
 		x += incx;
-		real_type cv = RNP::Traits<T>::abs1(*x);
+		real_type cv = RNP::Traits<T>::norm1(*x);
 		if(cv > mv){ mi = i; mv = cv; }
 	}
 	return mi;
@@ -1054,9 +1056,9 @@ static void MultTrM(
 								temp += a[k+i*lda]*b[k+j*ldb];
 							}
 						}else{
-							if(nounit) temp *= std::conj(a[i+i*lda]);
+							if(nounit) temp *= RNP::Traits<T>::conj(a[i+i*lda]);
 							for(size_t k = 0; k < i; ++k){
-								temp += std::conj(a[k+i*lda])*b[k+j*ldb];
+								temp += RNP::Traits<T>::conj(a[k+i*lda])*b[k+j*ldb];
 							}
 						}
 						b[i+j*ldb] = alpha*temp;
@@ -1072,9 +1074,9 @@ static void MultTrM(
 								temp += a[k+i*lda]*b[k+j*ldb];
 							}
 						}else{
-							if(nounit) temp *= std::conj(a[i+i*lda]);
+							if(nounit) temp *= RNP::Traits<T>::conj(a[i+i*lda]);
 							for(size_t k = i+1; k < m; ++k){
-								temp += std::conj(a[k+i*lda])*b[k+j*ldb];
+								temp += RNP::Traits<T>::conj(a[k+i*lda])*b[k+j*ldb];
 							}
 						}
 						b[i+j*ldb] = alpha*temp;
@@ -1126,7 +1128,7 @@ static void MultTrM(
 							if(noconj){
 								temp = alpha*a[j+k*lda];
 							}else{
-								temp = alpha*std::conj(a[j+k*lda]);
+								temp = alpha*RNP::Traits<T>::conj(a[j+k*lda]);
 							}
 							for(size_t i = 0; i < m; ++i){
 								b[i+j*ldb] += temp*b[i+k*ldb];
@@ -1138,7 +1140,7 @@ static void MultTrM(
 						if(noconj){
 							temp *= a[k+k*lda];
 						}else{
-							temp *= std::conj(a[k+k*lda]);
+							temp *= RNP::Traits<T>::conj(a[k+k*lda]);
 						}
 					}
 					if(temp != T(1)){
@@ -1155,7 +1157,7 @@ static void MultTrM(
 							if(noconj){
 								temp = alpha*a[j+k*lda];
 							}else{
-								temp = alpha*std::conj(a[j+k*lda]);
+								temp = alpha*RNP::Traits<T>::conj(a[j+k*lda]);
 							}
 							for(size_t i = 0; i < m; ++i){
 								b[i+j*ldb] += temp*b[i+k*ldb];
@@ -1167,7 +1169,7 @@ static void MultTrM(
 						if(noconj){
 							temp *= a[k+k*lda];
 						}else{
-							temp = temp*std::conj(a[k+k*lda]);
+							temp = temp*RNP::Traits<T>::conj(a[k+k*lda]);
 						}
 					}
 					if(temp != T(1)){
