@@ -5,6 +5,7 @@
 #include <cmath>
 #include <complex>
 #include <limits>
+#include <cstdlib>
 
 namespace RNP{
 
@@ -40,6 +41,7 @@ template <typename T> struct GenericTraits{
 	};
 	typedef T Real;
 	static inline Real epsilon(){ return std::numeric_limits<T>::epsilon(); }
+	static inline Real minimum(){ return std::numeric_limits<T>::min(); }
 	static inline Real maximum(){ return std::numeric_limits<T>::max(); }
 	static inline Real abs(const T &val){ return std::abs(val); }
 	static inline Real norm1(const T &val){ return std::abs(val); }
@@ -63,6 +65,7 @@ template<typename _Real> struct Traits<std::complex<_Real> >
 	typedef std::complex<_Real> Complex;
 	typedef _Real Real;
 	static inline Real epsilon(){ return std::numeric_limits<_Real>::epsilon(); }
+	static inline Real minimum(){ return std::numeric_limits<_Real>::min(); }
 	static inline Real maximum(){ return std::numeric_limits<_Real>::max(); }
 	static inline Real abs(const Complex &val){ return std::abs(val); }
 	static inline Real norm1(const Complex&val){ return std::abs(std::real(val)) + std::abs(std::imag(val)); }
