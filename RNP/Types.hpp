@@ -6,6 +6,9 @@
 #include <complex>
 #include <limits>
 #include <cstdlib>
+#ifdef RNP_ENABLE_DEBUG
+# include <RNP/Debug.hpp>
+#endif
 
 namespace RNP{
 
