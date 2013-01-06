@@ -1,3 +1,4 @@
+#include <RNP/Mallocator.hpp>
 #include <RNP/TBLAS.hpp>
 #include <RNP/IOBasic.hpp>
 #include <iostream>
@@ -8,7 +9,7 @@ int main(){
 	double x[2] = {5,6};
 	double y[2] = {7,8};
 	
-	RNP::Matrix<double> A(2,2,a,2);
+	RNP::Matrix<double,Mallocator<double> > A(2,2,a,2);
 	RNP::Matrix<double> B(2,2,b,2);
 	RNP::Vector<double> X(2,x,1);
 	RNP::Vector<double> Y(2,y,1);

@@ -8,8 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-
-#include <iostream>
+#include <RNP/Debug.hpp>
 
 namespace RNP{
 
