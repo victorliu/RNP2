@@ -6,14 +6,14 @@
 #endif
 
 #define RNPAssertStringify(s) #s
-#define RNPAssert(COND) RNP::Assert(COND, RNPAssertStringify(COND))
+#define RNPAssert(COND) RNP::Assert(COND, __FILE__, __LINE__, RNPAssertStringify(COND))
 
 namespace RNP{
 
-inline void Assert(bool cond, const char *str){
+inline void Assert(bool cond, const char *file, int line, const char *str){
 #ifdef RNP_ENABLE_DEBUG
 	if(!cond){
-		std::cerr << "Assertion failed: " << str << std::endl;
+		std::cerr << "Assertion failed in " << file << ":" << line << ": " << str << std::endl;
 	}
 #endif
 }
