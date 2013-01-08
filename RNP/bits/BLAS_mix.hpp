@@ -71,7 +71,6 @@
 //// Level 1/2
 // Set       : Sets entries in a vector or (parts of a) matrix (_laset)
 // Copy      : Copies a matrix, possilby transposed
-// CopyTr    : Copies triangular parts of matrices (~_lacpy)
 // Conjugate : Conjugates a vector (_lacgv)
 // Rescale   : Rescales a matrix (_lascl)
 // Norm1     : True 1-norm of a vector
@@ -113,25 +112,6 @@ void Copy(const char *trans, size_t m, size_t n, const T* RNP_RESTRICT src, size
 		for(size_t j = 0; j < n; ++j){
 			for(size_t i = 0; i < m; ++i){
 				dst[j+i*lddst] = src[i+j*ldsrc];
-			}
-		}
-	}
-}
-
-template <typename T>
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const T* RNP_RESTRICT src, size_t ldsrc, T* RNP_RESTRICT dst, size_t lddst){
-	if('L' == uplo[0]){
-		for(size_t j = 0; j < n; ++j){
-			size_t i0 = ('N' == diag[0] ? j : j+1);
-			for(size_t i = i0; i < m; ++i){
-				dst[i+j*lddst] = src[i+j*ldsrc];
-			}
-		}
-	}else{
-		for(size_t j = 0; j < n; ++j){
-			size_t ilim = ('N' == diag[0] ? j+1 : j);
-			for(size_t i = 0; i < ilim; ++i){
-				dst[i+j*lddst] = src[i+j*ldsrc];
 			}
 		}
 	}
@@ -355,10 +335,9 @@ T ConjugateDot(size_t n, const T* RNP_RESTRICT x, size_t incx, const T* RNP_REST
 	return sum;
 }
 
-template <class T>
+template <typename T>
 typename Traits<T>::real_type Norm2(size_t n, const T* RNP_RESTRICT x, size_t incx){
 	typedef typename Traits<T>::real_type real_type;
-	const real_type rteps(sqrt(Traits<real_type>::eps()));
 	static const real_type rzero(0);
 	static const real_type rone(1);
 	real_type ssq(1), scale(0);

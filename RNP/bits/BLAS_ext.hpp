@@ -67,7 +67,6 @@
 //// Level 1/2
 // Set       : Sets entries in a vector or (parts of a) matrix (_laset)
 // Copy      : Copies a matrix, possilby transposed
-// CopyTr    : Copies triangular parts of matrices (~_lacpy)
 // Conjugate : Conjugates a vector (_lacgv)
 // Rescale   : Rescales a matrix (_lascl)
 // Norm1     : True 1-norm of a vector
@@ -96,11 +95,6 @@ void Copy(const char *trans, size_t m, size_t n, const float *src, size_t ldsrc,
 void Copy(const char *trans, size_t m, size_t n, const double *src, size_t ldsrc, double *dst, size_t lddst);
 void Copy(const char *trans, size_t m, size_t n, const std::complex<float> *src, size_t ldsrc, std::complex<float> *dst, size_t lddst);
 void Copy(const char *trans, size_t m, size_t n, const std::complex<double> *src, size_t ldsrc, std::complex<double> *dst, size_t lddst);
-
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const float *src, size_t ldsrc, float *dst, size_t lddst);
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const double *src, size_t ldsrc, double *dst, size_t lddst);
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const std::complex<float> *src, size_t ldsrc, std::complex<float> *dst, size_t lddst);
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const std::complex<double> *src, size_t ldsrc, std::complex<double> *dst, size_t lddst);
 
 void Conjugate(size_t n, float *x, size_t incx);
 void Conjugate(size_t n, double *x, size_t incx);

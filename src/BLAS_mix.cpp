@@ -67,7 +67,6 @@
 //// Level 1/2
 // Set       : Sets entries in a vector or (parts of a) matrix (_laset)
 // Copy      : Copies a matrix, possilby transposed
-// CopyTr    : Copies triangular parts of matrices (~_lacpy)
 // Conjugate : Conjugates a vector (_lacgv)
 // Rescale   : Rescales a matrix (_lascl)
 //

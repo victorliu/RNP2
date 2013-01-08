@@ -67,7 +67,6 @@
 //// Level 1/2
 // Set       : Sets entries in a vector or (parts of a) matrix (_laset)
 // Copy      : Copies a matrix, possilby transposed
-// CopyTr    : Copies triangular parts of matrices (~_lacpy)
 // Conjugate : Conjugates a vector (_lacgv)
 // Rescale   : Rescales a matrix (_lascl)
 //
@@ -167,38 +166,6 @@ void Copy(const char *trans, size_t m, size_t n, const std::complex<float> *src,
 }
 void Copy(const char *trans, size_t m, size_t n, const std::complex<double> *src, size_t ldsrc, std::complex<double> *dst, size_t lddst){
 	Copy_trans_generic(trans, m, n, src, ldsrc, dst, lddst);
-}
-
-template <typename T>
-void CopyTr_generic(const char *uplo, const char *diag, size_t m, size_t n, const T *src, size_t ldsrc, T *dst, size_t lddst){
-	if('L' == uplo[0]){
-		for(size_t j = 0; j < n; ++j){
-			size_t i0 = ('N' == diag[0] ? j : j+1);
-			for(size_t i = i0; i < m; ++i){
-				dst[i+j*lddst] = src[i+j*ldsrc];
-			}
-		}
-	}else{
-		for(size_t j = 0; j < n; ++j){
-			size_t ilim = ('N' == diag[0] ? j+1 : j);
-			for(size_t i = 0; i < ilim; ++i){
-				dst[i+j*lddst] = src[i+j*ldsrc];
-			}
-		}
-	}
-}
-
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const float *src, size_t ldsrc, float *dst, size_t lddst){
-	CopyTr_generic(uplo, diag, m, n, src, ldsrc, dst, lddst);
-}
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const double *src, size_t ldsrc, double *dst, size_t lddst){
-	CopyTr_generic(uplo, diag, m, n, src, ldsrc, dst, lddst);
-}
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const std::complex<float> *src, size_t ldsrc, std::complex<float> *dst, size_t lddst){
-	CopyTr_generic(uplo, diag, m, n, src, ldsrc, dst, lddst);
-}
-void CopyTr(const char *uplo, const char *diag, size_t m, size_t n, const std::complex<double> *src, size_t ldsrc, std::complex<double> *dst, size_t lddst){
-	CopyTr_generic(uplo, diag, m, n, src, ldsrc, dst, lddst);
 }
 
 template <typename T>

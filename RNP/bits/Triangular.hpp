@@ -104,6 +104,25 @@ int Invert(
 	return 0;
 }
 
+template <typename T>
+void Copy(const char *uplo, const char *diag, size_t m, size_t n, const T* RNP_RESTRICT src, size_t ldsrc, T* RNP_RESTRICT dst, size_t lddst){
+	if('L' == uplo[0]){
+		for(size_t j = 0; j < n; ++j){
+			size_t i0 = ('N' == diag[0] ? j : j+1);
+			for(size_t i = i0; i < m; ++i){
+				dst[i+j*lddst] = src[i+j*ldsrc];
+			}
+		}
+	}else{
+		for(size_t j = 0; j < n; ++j){
+			size_t ilim = ('N' == diag[0] ? j+1 : j);
+			for(size_t i = 0; i < ilim; ++i){
+				dst[i+j*lddst] = src[i+j*ldsrc];
+			}
+		}
+	}
+}
+
 } // namespace Triangular
 } // namespace LA
 } // namespace RNP
