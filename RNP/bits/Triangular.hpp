@@ -116,6 +116,7 @@ void Copy(const char *uplo, const char *diag, size_t m, size_t n, const T* RNP_R
 	}else{
 		for(size_t j = 0; j < n; ++j){
 			size_t ilim = ('N' == diag[0] ? j+1 : j);
+			if(m < ilim){ ilim = m; }
 			for(size_t i = 0; i < ilim; ++i){
 				dst[i+j*lddst] = src[i+j*ldsrc];
 			}

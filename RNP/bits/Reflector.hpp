@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <RNP/BLAS.hpp>
 #include <RNP/Types.hpp>
+#include <RNP/Debug.hpp>
+#include <iostream>
 
 namespace RNP{
 namespace LA{
@@ -13,7 +15,7 @@ namespace Reflector{
 template <typename T>
 size_t LastNonzeroColumn(size_t m, size_t n, const T *a, size_t lda){ // ilazlc, iladlc, ilaclc, ilaslc
 	// if n = 0, returns -1
-	if(n < 1 || T(0) != a[0+(n-1)*lda] || T(0) != a[m-1+(n-1)*lda]){ return n-1; }
+	if(0 == n || T(0) != a[0+(n-1)*lda] || T(0) != a[m-1+(n-1)*lda]){ return n-1; }
 	size_t j = n;
 	while(j --> 0){
 		for(size_t i = 0; i < m; ++i){
@@ -26,7 +28,7 @@ size_t LastNonzeroColumn(size_t m, size_t n, const T *a, size_t lda){ // ilazlc,
 template <typename T>
 size_t LastNonzeroRow(size_t m, size_t n, const T *a, size_t lda){ // ilazlr, iladlr, ilaclr, ilaslr
 	// if m = 0, returns -1
-	if(m < 1 || T(0) != a[m-1+0*lda] || T(0) != a[m-1+(n-1)*lda]){ return m-1; }
+	if(0 == m || T(0) != a[m-1+0*lda] || T(0) != a[m-1+(n-1)*lda]){ return m-1; }
 	size_t i = m;
 	while(i --> 0){
 		for(size_t j = 0; j < n; ++j){
@@ -384,12 +386,17 @@ void Apply(
 				if(vconj){
 					BLAS::MultMV("T", lenv-1, lenc, T(1), &c[1+0*ldc], ldc, &v[incv], incv, T(0), work, 1);
 					BLAS::Conjugate(lenc, work, 1);
+					// Add in first column
+					BLAS::Axpy(lenc, one, c, ldc, work, 1);
 				}else{
-					BLAS::MultMV("C", lenv-1, lenc, T(1), &c[1+0*ldc], ldc, &v[incv], incv, T(0), work, 1);
+					BLAS::Copy(lenc, c, ldc, work, 1);
+					BLAS::Conjugate(lenc, work, 1);
+					BLAS::MultMV("C", lenv-1, lenc, T(1), &c[1+0*ldc], ldc, &v[incv], incv, T(1), work, 1);
 				}
+			}else{
+				BLAS::Copy(lenc, c, ldc, work, 1);
+				BLAS::Conjugate(lenc, work, 1);
 			}
-			// Add in first column
-			BLAS::Axpy(lenc, one, c, ldc, work, 1);
 			
 			// C(1:lastv,1:lastc) := C(...) - v(1:lastv) * w(1:lastc,1)'
 			// Add in first row contribution
@@ -408,20 +415,20 @@ void Apply(
 			}
 		}else{ // Form  C * H
 			// w(1:lastc,1) := C(1:lastc,1:lastv) * v(1:lastv)
+			// Add in first column
+			BLAS::Copy(lenc, c, 1, work, 1);
 			if(lenv > 1){ // Add remaining contribution
 				if(vconj){
-					BLAS::MultMV("N", lenc, lenv-1, T(1), &c[0+1*ldc], ldc, &v[incv], incv, T(0), work, 1);
-				}else{
-					for(size_t i = 0; i < lenc; ++i){ work[i] = T(0); }
 					for(size_t j = 1; j < lenv; ++j){
+						T cvj(Traits<T>::conj(v[j*incv]));
 						for(size_t i = 0; i < lenc; ++i){
-							work[i] += c[i+j*ldc] * Traits<T>::conj(v[j*incv]);
+							work[i] += c[i+j*ldc] * cvj;
 						}
 					}
+				}else{
+					BLAS::MultMV("N", lenc, lenv-1, T(1), &c[0+1*ldc], ldc, &v[incv], incv, T(1), work, 1);
 				}
 			}
-			// Add in first column
-			BLAS::Axpy(lenc, one, c, 1, work, 1);
 			// C(1:lastc,1:lastv) := C(...) - w(1:lastc,1) * v(1:lastv)'
 			// Add in first col
 			BLAS::Axpy(lenc, -tau, work, 1, c, 1);

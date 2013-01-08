@@ -16,9 +16,9 @@ namespace QR{
 // Specialize this class to tune the block size.
 template <typename T>
 struct Tuning{
-	static size_t block_size_opt(size_t m, size_t n){ return 4; }
-	static size_t block_size_min(size_t m, size_t n){ return 4; }
-	static size_t crossover_size(size_t m, size_t n){ return 4; }
+	static size_t block_size_opt(size_t m, size_t n){ return 64; }
+	static size_t block_size_min(size_t m, size_t n){ return 64; }
+	static size_t crossover_size(size_t m, size_t n){ return 64; }
 };
 
 } // namespace QR
@@ -240,15 +240,14 @@ void QRMultQ_unblocked(
 			}
 			//T aii = a[i+i*lda];
 			//a[i+i*lda] = 1;
-			//ReflectorApply(side, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
+			//Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 			//a[i+i*lda] = aii;
 			
 			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 		}
 	}else{
 		// loop backwards
-		size_t i = k;
-		while(i --> 0){
+		size_t i = k; while(i --> 0){
 			if(left){ // H(i) or H(i)' is applied to C(i:m,1:n)
 				mi = m - i;
 				ic = i;
@@ -266,7 +265,7 @@ void QRMultQ_unblocked(
 			}
 			//T aii = a[i+i*lda];
 			//a[i+i*lda] = 1;
-			//ReflectorApply(side, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
+			//Reflector::Apply(side, false, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 			//a[i+i*lda] = aii;
 			
 			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
