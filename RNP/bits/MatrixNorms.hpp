@@ -28,12 +28,12 @@ typename Traits<T>::real_type MatrixNorm(
 ){
 	typedef typename Traits<T>::real_type real_type;
 	real_type result(0);
-	if(n < 1){ return result; }
+	if(0 == n){ return result; }
 	if('M' == norm[0]){ // max(abs(A(i,j)))
 		for(size_t j = 0; j < n; ++j){
 			for(size_t i = 0; i < m; ++i){
 				real_type ca = Traits<T>::abs(a[i+j*lda]);
-				if(ca > result){ result = ca; }
+				if(!(ca < result)){ result = ca; }
 			}
 		}
 	}else if('O' == norm[0] || '1' == norm[0]){ // max col sum
@@ -42,7 +42,7 @@ typename Traits<T>::real_type MatrixNorm(
 			for(size_t i = 0; i < m; ++i){
 				sum += Traits<T>::abs(a[i+j*lda]);
 			}
-			if(sum > result){ result = sum; }
+			if(!(sum < result)){ result = sum; }
 		}
 	}else if('I' == norm[0]){ // max row sum
 		if(NULL == work){ // can't accumulate row sums
@@ -51,7 +51,7 @@ typename Traits<T>::real_type MatrixNorm(
 				for(size_t j = 0; j < n; ++j){
 					sum += Traits<T>::abs(a[i+j*lda]);
 				}
-				if(sum > result){ result = sum; }
+				if(!(sum < result)){ result = sum; }
 			}
 		}else{ // accumulate row sums in a cache-friendlier traversal order
 			for(size_t i = 0; i < m; ++i){ work[i] = 0; }
@@ -61,7 +61,7 @@ typename Traits<T>::real_type MatrixNorm(
 				}
 			}
 			for(size_t i = 0; i < m; ++i){
-				if(work[i] > result){ result = work[i]; }
+				if(!(work[i] < result)){ result = work[i]; }
 			}
 		}
 	}else if('F' == norm[0] || 'E' == norm[0]){ // Frobenius norm
