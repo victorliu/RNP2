@@ -117,6 +117,7 @@ void UniformRealVector(size_t n, T *x, int iseed[4] = NULL){ // dlaruv
 	// 48-bit integers are stored in 4 integer array elements with 12 bits
 	// per element. Hence the routine is portable across machines with
 	// integers of 32 bits or more.
+	if(0 == n){ return; }
 	static int internal_iseed[4] = {2398, 691, 782, 721};
 	int *_iseed = iseed;
 	if(NULL == _iseed){
