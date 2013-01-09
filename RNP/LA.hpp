@@ -8,5 +8,6 @@
 #include "bits/LU_obj.hpp"
 #include "bits/QR.hpp"
 #include "bits/MatrixNormEstimates.hpp"
+#include "bits/Tridiagonal.hpp"
 
 #endif // RNP_LA_HPP_INCLUDED

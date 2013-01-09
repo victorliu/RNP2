@@ -13,7 +13,8 @@ test_lu: test_lu.cpp
 	g++ $(CFLAGS) test_lu.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
 test_qr_fat: test_qr_fat.cpp
 	g++ $(CFLAGS) test_qr_fat.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
-
+test_symtridiag_qr: test_symtridiag_qr.cpp
+	g++ $(CFLAGS) test_symtridiag_qr.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
 #test_qr_tall: test_qr_tall.cpp
 #	g++ $(CFLAGS) test_qr_tall.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
 #test_lu_obj: test_lu_obj.cpp
