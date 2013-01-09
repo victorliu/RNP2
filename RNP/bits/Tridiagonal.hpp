@@ -150,15 +150,19 @@ void SymmetricEigensystem2(
 	}
 }
 
-template <typename T> // T must be a real type
+// If z is non NULL, then the diagonalizing rotations are applied to z.
+// For eigenvectors of a tridiagonal matrix, set z to identity before
+// calling this. For symmetric square, z should be the orthogonal
+// matrix that tridiagonalized it.
+template <typename T>
 int SymmetricQRIteration(
 	size_t n,
-	T *diag, T *offdiag,
+	typename Traits<T>::real_type *diag,
+	typename Traits<T>::real_type *offdiag,
 	T *z, size_t ldz,
-	T *work // only needed if NULL != z, size 2*(n-1)
+	typename Traits<T>::real_type *work // only needed if NULL != z, size 2*(n-1)
 ){
-	RNPAssert(!Traits<T>::is_complex()); // T must be a real type
-	typedef T real_type;
+	typedef typename Traits<T>::real_type real_type;
 	if(n <= 1){
 		return 0;
 	}
@@ -225,6 +229,7 @@ outer_loop_start:
 	}
 
 	// Scale submatrix in rows and columns (l+1) to (lend+1)
+	// For the complex case, this should have been the "I" norm.
 	anorm = LA::Tridiagonal::Norm("M", lend-l+1, &diag[l], &offdiag[l]);
 	iscale = 0;
 	if(real_type(0) == anorm){
