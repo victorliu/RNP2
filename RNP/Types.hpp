@@ -298,7 +298,7 @@ public:
 	}
 	~Vector(){
 		if(base_type::SELF_ALLOCATED & this->flags){
-			this->template Delloc<T>(x, n);
+			this->template Dealloc<T>(x, n);
 			x = NULL;
 		}
 	}
