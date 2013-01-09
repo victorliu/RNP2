@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <RNP/BLAS.hpp>
+#include <RNP/Random.hpp>
 #include <RNP/Sort.hpp>
 
 namespace RNP{
