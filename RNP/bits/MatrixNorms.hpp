@@ -85,6 +85,102 @@ typename Traits<T>::real_type MatrixNorm(
 	return result;
 }
 
+template <typename T> // _lanhe
+typename Traits<T>::real_type MatrixNormHerm(
+	const char *norm, const char *uplo, size_t n, const T *a, size_t lda
+){
+	typedef typename Traits<T>::real_type real_type;
+	real_type result(0);
+	if(0 == n){ return result; }
+	const bool upper = ('U' == uplo[0]);
+	if('M' == norm[0]){ // max(abs(A(i,j)))
+		if(upper){
+			for(size_t j = 0; j < n; ++j){
+				for(size_t i = 0; i <= j; ++i){
+					real_type ca = Traits<T>::abs(a[i+j*lda]);
+					if(!(ca < result)){ result = ca; }
+				}
+			}
+		}else{
+			for(size_t j = 0; j < n; ++j){
+				for(size_t i = j; i < n; ++i){
+					real_type ca = Traits<T>::abs(a[i+j*lda]);
+					if(!(ca < result)){ result = ca; }
+				}
+			}
+		}
+	}else if('O' == norm[0] || '1' == norm[0] || 'I' == norm[0]){ // max col sum
+		if(upper){
+			for(size_t j = 0; j < n; ++j){
+				real_type sum = 0;
+				for(size_t i = 0; i <= j; ++i){
+					sum += Traits<T>::abs(a[i+j*lda]);
+				}
+				if(!(sum < result)){ result = sum; }
+			}
+		}else{
+			for(size_t j = 0; j < n; ++j){
+				real_type sum = 0;
+				for(size_t i = j; i < n; ++i){
+					real_type ca = Traits<T>::abs(a[i+j*lda]);
+					if(!(ca < result)){ result = ca; }
+				}
+				if(!(sum < result)){ result = sum; }
+			}
+		}
+	}else if('F' == norm[0] || 'E' == norm[0]){ // Frobenius norm
+		real_type scale(0);
+		real_type sum(1);
+		if(upper){
+			for(size_t j = 0; j < n; ++j){
+				for(size_t i = 0; i <= j; ++i){
+					real_type ca = Traits<T>::abs(a[i+j*lda]);
+					if(scale < ca){
+						real_type r = scale/ca;
+						if(i == j){
+							sum = real_type(1) + sum*r*r;
+						}else{
+							sum = real_type(2) + sum*r*r;
+						}
+						scale = ca;
+					}else{
+						real_type r = ca/scale;
+						if(i == j){
+							sum += r*r;
+						}else{
+							sum += real_type(2)*r*r;
+						}
+					}
+				}
+			}
+		}else{
+			for(size_t j = 0; j < n; ++j){
+				for(size_t i = j; i < n; ++i){
+					real_type ca = Traits<T>::abs(a[i+j*lda]);
+					if(scale < ca){
+						real_type r = scale/ca;
+						if(i == j){
+							sum = real_type(1) + sum*r*r;
+						}else{
+							sum = real_type(2) + sum*r*r;
+						}
+						scale = ca;
+					}else{
+						real_type r = ca/scale;
+						if(i == j){
+							sum += r*r;
+						}else{
+							sum += real_type(2)*r*r;
+						}
+					}
+				}
+			}
+		}
+		result = scale*sqrt(sum);
+	}
+	return result;
+}
+
 } // namespace LA
 } // namespace RNP
 
