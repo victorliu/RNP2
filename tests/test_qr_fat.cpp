@@ -25,9 +25,13 @@ void test_qr(size_t m, size_t n){
 	}
 	
 	T *tau = new T[m];
-	T *work = new T[n];
+	T *work = NULL;
+	size_t lwork = 0;
 	RNP::BLAS::Copy(m, n, A, m, Afac, m);
-	RNP::LA::QRFactor_unblocked(m, n, Afac, m, tau, work);
+	RNP::LA::QRFactor(m, n, Afac, m, tau, &lwork, work);
+	std::cout << "lwork = " << lwork << std::endl;
+	work = new T[lwork];
+	RNP::LA::QRFactor(m, n, Afac, m, tau, &lwork, work);
 	
 	if(0){
 		std::cout << "Factored A:" << std::endl;
@@ -37,7 +41,10 @@ void test_qr(size_t m, size_t n){
 	
 	// Apply Q to the left of original A (use B for workspace)
 	RNP::BLAS::Copy(m, n, A, m, B, m);
-	RNP::LA::QRMultQ_unblocked("L", "C", m, n, m, Afac, m, tau, B, m, work);
+	delete [] work; work = NULL; lwork = 0;
+	RNP::LA::QRMultQ("L", "C", m, n, m, Afac, m, tau, B, m, &lwork, work);
+	work = new T[lwork];
+	RNP::LA::QRMultQ("L", "C", m, n, m, Afac, m, tau, B, m, &lwork, work);
 	
 	if(0){
 		std::cout << "Q' * origA:" << std::endl;
@@ -63,7 +70,7 @@ void test_qr(size_t m, size_t n){
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QRMultQ_unblocked("L", "N", m, n, m, Afac, m, tau, B, m, work);
+	RNP::LA::QRMultQ("L", "N", m, n, m, Afac, m, tau, B, m, &lwork, work);
 	if(0){
 		std::cout << "B = R*Q:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
@@ -92,7 +99,7 @@ void test_qr(size_t m, size_t n){
 		RNP::Matrix<T> mB(n, m, B, n);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QRMultQ_unblocked("R", "N", n, m, m, Afac, m, tau, B, n, work);
+	RNP::LA::QRMultQ("R", "N", n, m, m, Afac, m, tau, B, n, &lwork, work);
 	if(0){
 		std::cout << "B = R':" << std::endl;
 		RNP::Matrix<T> mB(n, m, B, n);
@@ -116,7 +123,7 @@ void test_qr(size_t m, size_t n){
 			B[i+j*n] = RNP::Traits<T>::conj(Afac[j+i*m]);
 		}
 	}
-	RNP::LA::QRMultQ_unblocked("R", "C", n, m, m, Afac, m, tau, B, n, work);
+	RNP::LA::QRMultQ("R", "C", n, m, m, Afac, m, tau, B, n, &lwork, work);
 	// We should recover A'
 	if(1){
 		T sum = 0;
@@ -132,7 +139,11 @@ void test_qr(size_t m, size_t n){
 	// Make Q
 	T *Q = new T[m*m];
 	RNP::BLAS::Copy(m, m, Afac, m, Q, m);
-	RNP::LA::QRGenerateQ_unblocked(m, m, m, Q, m, tau, work);
+	delete [] work; work = NULL; lwork = 0;
+	RNP::LA::QRGenerateQ(m, m, m, Q, m, tau, &lwork, work);
+	//lwork = n;
+	work = new T[lwork];
+	RNP::LA::QRGenerateQ(m, m, m, Q, m, tau, &lwork, work);
 	
 	if(0){
 		std::cout << "Q:" << std::endl;
@@ -172,9 +183,9 @@ void test_qr(size_t m, size_t n){
 
 int main(){
 	srand(0);
-	size_t m = 512;
-	size_t n = 700; // must be larger than m
+	size_t m = 166;
+	size_t n = 170; // must be larger than m
 	test_qr<double>(m, n);
-	test_qr<std::complex<double> >(m, n);
+	//test_qr<std::complex<double> >(m, n);
 	return 0;
 }

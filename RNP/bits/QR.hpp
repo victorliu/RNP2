@@ -16,9 +16,14 @@ namespace QR{
 // Specialize this class to tune the block size.
 template <typename T>
 struct Tuning{
-	static size_t block_size_opt(size_t m, size_t n){ return 64; }
-	static size_t block_size_min(size_t m, size_t n){ return 64; }
-	static size_t crossover_size(size_t m, size_t n){ return 64; }
+	static size_t factor_block_size_opt(size_t m, size_t n){ return 64; }
+	static size_t factor_block_size_min(size_t m, size_t n){ return 64; }
+	static size_t factor_crossover_size(size_t m, size_t n){ return 64; }
+	static size_t multQ_block_size_opt(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 64; }
+	static size_t multQ_block_size_min(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 64; }
+	static size_t genQ_block_size_opt(size_t m, size_t n, size_t k){ return 64; }
+	static size_t genQ_block_size_min(size_t m, size_t n, size_t k){ return 64; }
+	static size_t genQ_crossover_size(size_t m, size_t n, size_t k){ return 64; }
 };
 
 } // namespace QR
@@ -60,7 +65,6 @@ struct Tuning{
 // and tau in TAU(i).
 template <typename T> // _geqr2
 void QRFactor_unblocked(size_t m, size_t n, T *a, size_t lda, T *tau, T *work){
-
 	size_t k = m; if(n < k){ k = n; }
 	for(size_t i = 0; i < k; ++i){
 		// Generate elementary reflector H(i) to annihilate A(i+1:m,i)
@@ -93,7 +97,7 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 	if(0 == k){
 		return;
 	}
-	size_t nb = QR::Tuning<T>::block_size_opt(m, n);
+	size_t nb = QR::Tuning<T>::factor_block_size_opt(m, n);
 	if(NULL == work || 0 == *lwork){
 		*lwork = nb*n;
 		return;
@@ -104,7 +108,7 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 	size_t ldwork = n;
 	if(nb > 1 && nb < k){
 		// Determine when to cross over from blocked to unblocked code.
-		nx = QR::Tuning<T>::crossover_size(m, n);
+		nx = QR::Tuning<T>::factor_crossover_size(m, n);
 		if(nx < k){
 			// Determine if workspace is large enough for blocked code.
             iws = ldwork * nb;
@@ -112,28 +116,35 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 				// Not enough workspace to use optimal NB:  reduce NB and
 				// determine the minimum value of NB.
 				nb = *lwork / ldwork;
-				nbmin = QR::Tuning<T>::block_size_min(m, n);
+				nbmin = QR::Tuning<T>::factor_block_size_min(m, n);
 				if(2 > nbmin){ nbmin = 2; }
 			}
 		}
 	}
+	
+	// Layout of workspace:
+	//  [ T ] T is the nb-by-nb block triangular factor
+	//  [ W ] W is n-nb by n
+	// Thus work is treated as dimension n-by-nb
+	
 	size_t i;
 	if(nb >= nbmin && nb < k && nx < k){
 		// Use blocked code initially
 		for(i = 0; i+nx < k; i += nb){
 			const size_t ib = (k-i < nb ? k-i : nb);
-			// Compute the QR factorization of the current block A(i:m,i:i+ib-1)
+			// Compute the QR factorization of the current block A[i..m,i..i+ib]
 			QRFactor_unblocked(m-i, ib, &a[i+i*lda], lda, &tau[i], work);
 			if(i+ib < n){
 				// Form the triangular factor of the block reflector
-				// H = H(i) H(i+1) . . . H(i+ib-1)
+				//   H = H[i] H[i+1] ...  H[i+ib-1]
+				// The triangular factor goes in work[0..nb,0..nb]
 				Reflector::GenerateBlockTr(
 					"F","C", m-i, ib, &a[i+i*lda], lda, &tau[i], work, ldwork
 				);
-				// Apply H^H to A(i:m,i+ib:n) from the left
+				// Apply H^H to A[i..m,i+ib..n] from the left
 				Reflector::ApplyBlock(
 					"L","C","F","C", m-i, n-i-ib, ib, &a[i+i*lda], lda,
-					work, ldwork, &a[i+(i+ib)*lda], lda, &work[ib], ldwork
+					work, ldwork, &a[i+(i+ib)*lda], lda, &work[ib+0*ldwork], ldwork
 				);
 			}
 		}
@@ -145,66 +156,13 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 	}
 }
 
-template <typename T> // _unmqr, _ormqr
+// Unblocked version of QRMultQ, work is length:
+//   n if side is L, m if side is R
+template <typename T> // _unmr2, _ormr2
 void QRMultQ_unblocked(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
-	const T *a, size_t lda, T *tau, T *c, size_t ldc, T *work
+	const T *a, size_t lda, const T *tau, T *c, size_t ldc, T *work
 ){
-	// Purpose
-	// =======
-
-	// ZUNM2R overwrites the general complex m-by-n matrix C with
-	//       Q * C  if SIDE = 'L' and TRANS = 'N', or
-	//       Q'* C  if SIDE = 'L' and TRANS = 'C', or
-	//       C * Q  if SIDE = 'R' and TRANS = 'N', or
-	//       C * Q' if SIDE = 'R' and TRANS = 'C',
-	// where Q is a complex unitary matrix defined as the product of k
-	// elementary reflectors
-	//       Q = H(1) H(2) . . . H(k)
-	// as returned by ZGEQRF. Q is of order m if SIDE = 'L' and of order n
-	// if SIDE = 'R'.
-
-	// Arguments
-	// =========
-
-	// SIDE    = 'L': apply Q or Q' from the Left
-	//         = 'R': apply Q or Q' from the Right
-
-	// TRANS   = 'N': apply Q  (No transpose)
-	//         = 'C': apply Q' (Conjugate transpose)
-
-	// M       The number of rows of the matrix C. M >= 0.
-
-	// N       The number of columns of the matrix C. N >= 0.
-
-	// K       The number of elementary reflectors whose product defines
-	//         the matrix Q.
-	//         If SIDE = 'L', M >= K >= 0;
-	//         if SIDE = 'R', N >= K >= 0.
-
-	// A       (input) COMPLEX*16 array, dimension (LDA,K)
-	//         The i-th column must contain the vector which defines the
-	//         elementary reflector H(i), for i = 1,2,...,k, as returned by
-	//         ZGEQRF in the first k columns of its array argument A.
-	//         A is modified by the routine but restored on exit.
-
-	// LDA     The leading dimension of the array A.
-	//         If SIDE = 'L', LDA >= max(1,M);
-	//         if SIDE = 'R', LDA >= max(1,N).
-
-	// TAU     TAU(i) must contain the scalar factor of the elementary
-	//         reflector H(i), as returned by ZGEQRF.
-
-	// C       (input/output) COMPLEX*16 array, dimension (LDC,N)
-	//         On entry, the m-by-n matrix C.
-	//         On exit, C is overwritten by Q*C or Q'*C or C*Q' or C*Q.
-
-	// LDC     The leading dimension of the array C. LDC >= max(1,M).
-
-	// WORK    (workspace) COMPLEX*16 array, dimension
-	//                                  (N) if SIDE = 'L',
-	//                                  (M) if SIDE = 'R'
-
 	const bool left = ('L' == side[0]);
 	const bool notran = ('N' == trans[0]);
 
@@ -223,58 +181,141 @@ void QRMultQ_unblocked(
 	if((left && ! notran) || (! left && notran)){
 		// loop forwards
 		for(size_t i = 0; i < k; ++i){
-			if(left){ // H(i) or H(i)' is applied to C(i:m,1:n)
+			if(left){ // H[i] or H[i]' is applied to C[i..m,0..n]
 				mi = m - i;
 				ic = i;
-			}else{ // H(i) or H(i)' is applied to C(1:m,i:n)
+			}else{ // H[i] or H[i]' is applied to C[0..m,i..n]
 				ni = n - i;
 				jc = i;
 			}
 
-			// Apply H(i) or H(i)'
 			T taui;
 			if(notran){
 				taui = tau[i];
 			}else{
 				taui = Traits<T>::conj(tau[i]);
 			}
-			//T aii = a[i+i*lda];
-			//a[i+i*lda] = 1;
-			//Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
-			//a[i+i*lda] = aii;
 			
 			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 		}
 	}else{
 		// loop backwards
 		size_t i = k; while(i --> 0){
-			if(left){ // H(i) or H(i)' is applied to C(i:m,1:n)
+			if(left){ // H[i] or H[i]' is applied to C[i..m,0:n]
 				mi = m - i;
 				ic = i;
-			}else{ // H(i) or H(i)' is applied to C(1:m,i:n)
+			}else{ // H[i] or H[i]' is applied to C[0..m,i..n]
 				ni = n - i;
 				jc = i;
 			}
 
-			// Apply H(i) or H(i)'
 			T taui;
 			if(notran){
 				taui = tau[i];
 			}else{
 				taui = Traits<T>::conj(tau[i]);
 			}
-			//T aii = a[i+i*lda];
-			//a[i+i*lda] = 1;
-			//Reflector::Apply(side, false, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
-			//a[i+i*lda] = aii;
 			
 			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 		}
 	}
 }
 
+template <typename T> // _unmqr, _ormqr
+void QRMultQ(
+	const char *side, const char *trans, size_t m, size_t n, size_t k,
+	const T *a, size_t lda, const T *tau, T *c, size_t ldc,
+	size_t *lwork, T *work
+){
+	if(0 == m || 0 == n || 0 == k){ return; }
+	const bool left = ('L' == side[0]);
+	const bool notran = ('N' == trans[0]);
+	const size_t nq = (left ? m : n);
+	const size_t nw = (left ? n : m);
+	
+	size_t nb = QR::Tuning<T>::multQ_block_size_opt(side, trans, m, n, k);
+	if(0 == *lwork || NULL == work){
+		*lwork = nb * nw + nb*nb;
+		return;
+	}
+	
+	size_t nbmin = 2;
+	size_t ldwork = nw;
+	size_t iws = nw;
+	T *t = NULL;
+	size_t ldt = nb;
+	if(nb > 1 && nb < k){
+		iws = nw*nb + nb*nb;
+		t = work + nb*ldwork;
+		if(*lwork < iws){
+			// We want to solve for nb in the equation
+			//   *lwork == nb*nb + nb*nw
+			// A lower bound on nb is simply *lwork/(2*nw)
+			// An upper bound is *lwork/nw, so we have bounds within a
+			// factor 2 of being optimal.
+			nb = *lwork / (2*ldwork);
+			t = work + nb*ldwork;
+			ldt = nb;
+			nbmin = QR::Tuning<T>::multQ_block_size_min(side, trans, m, n, k);
+		}
+	}
+	
+	if(nb < nbmin || nb >= k){ // unblocked
+		QRMultQ_unblocked(side, trans, m, n, k, a,lda, tau, c, ldc, work);
+	}else{
+		size_t ni, mi, ic, jc;
+		if(left){
+			ni = n;
+			jc = 0;
+		}else{
+			mi = m;
+			ic = 0;
+		}
+		if((left && !notran) || (!left && notran)){	// loop forwards
+			for(size_t i = 0; i < k; i += nb){
+				size_t ib = (k < nb+i ? k-i : nb);
+				Reflector::GenerateBlockTr("F","C", nq-i, ib, &a[i+i*lda], lda, &tau[i], t, ldt);
+
+				if(left){
+					mi = m-i;
+					ic = i;
+				}else{
+					ni = n-i;
+					jc = i;
+				}
+				Reflector::ApplyBlock(
+					side, trans, "F", "C", mi, ni, ib,
+					&a[i+i*lda], lda, t, ldt, &c[ic+jc*ldc], ldc, work, ldwork
+				);
+			}
+		}else{
+			size_t i = (k/nb)*nb;
+			do{
+				size_t ib = (k < nb+i ? k-i : nb);
+				Reflector::GenerateBlockTr("F","C", nq-i, ib, &a[i+i*lda], lda, &tau[i], t, ldt);
+
+				if(left){
+					mi = m-i;
+					ic = i;
+				}else{
+					ni = n-i;
+					jc = i;
+				}
+				Reflector::ApplyBlock(
+					side, trans, "F", "C", mi, ni, ib,
+					&a[i+i*lda], lda, t, ldt, &c[ic+jc*ldc], ldc, work, ldwork
+				);
+				if(0 == i){ break; }
+				i -= nb;
+			}while(1);
+		}
+	}
+}
+
 template <class T> // _ung2r
-void QRGenerateQ_unblocked(size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work){
+void QRGenerateQ_unblocked(
+	size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
+){
 	// Generates an m by n complex matrix Q with orthonormal columns,
 	// which is defined as the first n columns of a product of k elementary
 	// reflectors of order m
@@ -332,6 +373,71 @@ void QRGenerateQ_unblocked(size_t m, size_t n, size_t k, T *a, size_t lda, const
 		for(size_t l = 0; l < i; ++l){
 			a[l+i*lda] = T(0);
 		}
+	}
+}
+
+template <class T> // _ungqr
+void QRGenerateQ(
+	size_t m, size_t n, size_t k, T *a, size_t lda,
+	const T *tau, size_t *lwork, T *work
+){
+	RNPAssert(k <= n);
+	RNPAssert(lda >= m);
+	if(0 == n){ return; }
+	
+	size_t nb = QR::Tuning<T>::genQ_block_size_opt(m, n, k);
+	if(0 == *lwork || NULL == work){
+		*lwork = n*nb;
+		return;
+	}
+	
+	size_t nbmin = 2;
+	size_t nx = 0;
+	size_t iws = n;
+	size_t ldwork = n;
+	if(nb > 1 && nb < k){
+		nx = QR::Tuning<T>::genQ_crossover_size(m, n, k);
+		if(nx < k){
+			iws = ldwork*nb;
+			if(*lwork < iws){
+				nb = *lwork / ldwork;
+				nbmin = QR::Tuning<T>::genQ_block_size_min(m, n, k);
+			}
+		}
+	}
+	
+	size_t ki = 0, kk = 0;
+	if(nb >= nbmin && nb < k && nx < k){ // use blocked code after last block
+		ki = ((k-nx-1)/nb) * nb;
+		kk = (k < ki+nb ? k : ki+nb);
+		for(size_t j = kk; j < n; ++j){
+			for(size_t i = 0; i < kk; ++i){
+				a[i+j*lda] = T(0);
+			}
+		}
+	}
+	//ki = nb;
+	if(kk < n){
+		QRGenerateQ_unblocked(m-kk, n-kk, k-kk, &a[kk+kk*lda], lda, &tau[kk], work);
+	}
+	if(kk > 0){
+		size_t i = ki;
+		do{
+			const size_t ib = (nb+i < k ? nb : k-i);
+			if(i+ib < n){
+				Reflector::GenerateBlockTr("F", "C", m-i, ib, &a[i+i*lda], lda, &tau[i], work, ldwork);
+				Reflector::ApplyBlock("L","N","F","C", m-i, n-i-ib, ib, &a[i+i*lda], lda, work, ldwork, &a[i+(i+ib)*lda], lda, &work[ib], ldwork);
+			}
+			// Apply H to rows 0..m of current block
+			QRGenerateQ_unblocked(m-i, ib, ib, &a[i+i*lda], lda, &tau[i], work);
+			// Set rows 0..i of current block to zero
+			for(size_t j = i; j < i+ib; ++j){
+				for(size_t l = 0; l < i; ++l){
+					a[l+j*lda] = T(0);
+				}
+			}
+			if(0 == i){ break; }else{ i -= nb; }
+		}while(1);
 	}
 }
 

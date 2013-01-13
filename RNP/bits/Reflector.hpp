@@ -14,6 +14,7 @@ namespace Reflector{
 
 template <typename T>
 size_t LastNonzeroColumn(size_t m, size_t n, const T *a, size_t lda){ // ilazlc, iladlc, ilaclc, ilaslc
+	RNPAssert(lda >= m);
 	// if n = 0, returns -1
 	if(0 == n || T(0) != a[0+(n-1)*lda] || T(0) != a[m-1+(n-1)*lda]){ return n-1; }
 	size_t j = n;
@@ -27,6 +28,7 @@ size_t LastNonzeroColumn(size_t m, size_t n, const T *a, size_t lda){ // ilazlc,
 
 template <typename T>
 size_t LastNonzeroRow(size_t m, size_t n, const T *a, size_t lda){ // ilazlr, iladlr, ilaclr, ilaslr
+	RNPAssert(lda >= m);
 	// if m = 0, returns -1
 	if(0 == m || T(0) != a[m-1+0*lda] || T(0) != a[m-1+(n-1)*lda]){ return m-1; }
 	size_t i = m;
@@ -673,7 +675,7 @@ void GeneratePositive(size_t n, T *alpha, T *x, size_t incx, T *tau){
 template <typename T>
 void GenerateBlockTr(
 	const char *dir, const char *storev,
-	size_t n, size_t k, T *v, size_t ldv, const T *tau,
+	size_t n, size_t k, const T *v, size_t ldv, const T *tau,
 	T *t, size_t ldt
 ){
 	if(0 == n){ return; }
@@ -687,27 +689,27 @@ void GenerateBlockTr(
 				}
 			}else{ // general case
 				size_t lastv;
-				if('C' == storev[0]){
+				if('C' == storev[0]){ // v should be n-by-k
 					for(lastv = n-1; lastv > i; --lastv){ // skip trailing zeros
 						if(T(0) != v[lastv+i*ldv]){ break; }
 					}
 					for(size_t j = 0; j < i; ++j){
 						t[j+i*ldt] = -tau[i] * Traits<T>::conj(v[i+j*ldv]);
 					}
-					size_t jlim = 1+(lastv < prevlastv ? lastv : prevlastv);
+					size_t jlim = (lastv < prevlastv ? lastv : prevlastv);
 					// T(1:i-1,i) := - tau(i) * V(i:j,1:i-1)**H * V(i:j,i)
 					BLAS::MultMV(
 						"C", jlim-i, i, -tau[i], &v[i+1+0*ldv], ldv,
-						&v[i+1+i*ldv], ldv, T(1), &t[0+i*ldt], 1
+						&v[i+1+i*ldv], 1, T(1), &t[0+i*ldt], 1
 					);
-				}else{
+				}else{ // v should be k-by-n
 					for(lastv = n-1; lastv > i; --lastv){ // skip trailing zeros
 						if(T(0) != v[i+lastv*ldv]){ break; }
 					}
 					for(size_t j = 0; j < i; ++j){
 						t[j+i*ldt] = -tau[i] * v[j+i*ldv];
 					}
-					size_t jlim = 1+(lastv < prevlastv ? lastv : prevlastv);
+					size_t jlim = (lastv < prevlastv ? lastv : prevlastv);
 					// T(1:i-1,i) := - tau(i) * V(1:i-1,i:j) * V(i,i:j)**H
 					BLAS::MultMM(
 						"N", "C", i, 1, jlim-i, -tau[i], &v[0+(i+1)*ldv], ldv,
@@ -882,7 +884,7 @@ void ApplyBlock(
 ){
 	if(0 == m || 0 == n){ return; }
 	const char *transt = ('N' == trans[0] ? "C" : "N");
-
+	
 	if('C' == storev[0]){
 		if('F' == dir[0]){
 			// Let  V =  ( V1 )    (first K rows)
