@@ -12,7 +12,26 @@ namespace RNP{
 namespace LA{
 namespace QR{
 
-// Specialize this class to tune the block size.
+///////////////////////////////////////////////////////////////////////
+// QR
+// ==
+// Computes the QR factorization and operations involving Q.
+//
+// List of routines
+// ----------------
+// * Factor_unblocked
+// * Factor
+// * MultQ_unblocked
+// * MultQ
+// * GenerateQ_unblocked
+// * GenerateQ
+
+///////////////////////////////////////////////////////////////////////
+// Tuning
+// ------
+// Specialize this class to tune the block sizes. The optimal block
+// size should be greater than or equal to the minimum block size.
+// The value of the crossover determines when to enable blocking.
 template <typename T>
 struct Tuning{
 	static size_t factor_block_size_opt(size_t m, size_t n){ return 64; }
@@ -25,69 +44,84 @@ struct Tuning{
 	static size_t genQ_crossover_size(size_t m, size_t n, size_t k){ return 64; }
 };
 
-// Computes a QR factorization of a complex m by n matrix A = Q * R.
 
-// Arguments
-// =========
-
-// M       The number of rows of the matrix A.  M >= 0.
-
-// N       The number of columns of the matrix A.  N >= 0.
-
-// A       (input/output) COMPLEX*16 array, dimension (LDA,N)
-//         On entry, the m by n matrix A.
-//         On exit, the elements on and above the diagonal of the array
-//         contain the min(m,n) by n upper trapezoidal matrix R (R is
-//         upper triangular if m >= n); the elements below the diagonal,
-//         with the array TAU, represent the unitary matrix Q as a
-//         product of elementary reflectors (see Further Details).
-
-// LDA     The leading dimension of the array A.  LDA >= max(1,M).
-
-// TAU     (output) COMPLEX*16 array, dimension (min(M,N))
-//         The scalar factors of the elementary reflectors (see Further
-//         Details).
-
-// WORK    (workspace) COMPLEX*16 array, dimension (N)
-
-// Further Details
-// ===============
-
+///////////////////////////////////////////////////////////////////////
+// Factor_unblocked
+// ----------------
+// Computes a QR factorization of an m-by-n matrix A = Q * R.
 // The matrix Q is represented as a product of elementary reflectors
-//    Q = H(1) H(2) . . . H(k), where k = min(m,n).
-// Each H(i) has the form
-//    H(i) = I - tau * v * v'
-// where tau is a complex scalar, and v is a complex vector with
-// v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
-// and tau in TAU(i).
-template <typename T> // _geqr2
-void Factor_unblocked(size_t m, size_t n, T *a, size_t lda, T *tau, T *work){
+//   Q = H[1] H[2] ... H[k-1], where k = min(m,n).
+// Each H[i] has the form
+//   H[i] = I - tau * v * v^H
+// where tau is a scalar, and v is a vector with v[0..i] = 0 and
+// v[i] = 1; v[i+1..m] is stored, upon exit, in A[i+1..m,i], and
+// tau in tau[i].
+// This routine uses only level 2 BLAS.
+// Equivalent to Lapack routines _geqr2.
+//
+// Arguments
+// m    Number of rows of the matrix A.
+// n    Number of columns of the matrix A.
+// a    Pointer to the first element of A. On exit, the upper
+//      triangle of A contains the R factor, and the lower triangle
+//      stores the vectors v of the elementary reflectors.
+// lda  Leading dimension of the array containing A (lda >= m).
+// tau  Output vector of tau's.
+// work Workspace of size n.
+template <typename T>
+void Factor_unblocked(
+	size_t m, size_t n, T *a, size_t lda, T *tau, T *work
+){
 	size_t k = m; if(n < k){ k = n; }
 	for(size_t i = 0; i < k; ++i){
-		// Generate elementary reflector H(i) to annihilate A(i+1:m,i)
+		// Generate elementary reflector H[i] to annihilate A[i+1..m,i]
 		size_t row = m-1; if(i+1 < row){ row = i+1; }
-		Reflector::Generate(m-i, &a[i+i*lda], &a[row+i*lda], 1, &tau[i]);
-		//ReflectorGenerate2(m-i, &a[i+i*lda], &a[row+i*lda], 1, &tau[i]);
-		//ReflectorGeneratePositive(m-i, &a[i+i*lda], &a[row+i*lda], 1, &tau[i]);
+		// Can replace with GeneratePositive if positive diagonal
+		// elements in R are required.
+		Reflector::Generate(
+			m-i, &a[i+i*lda], &a[row+i*lda], 1, &tau[i]
+		);
 		if(i < n-1){
-			// Apply H(i)' to A(i:m,i+1:n) from the left
+			// Apply H[i]^H to A[i..m,i+1..n] from the left
 			T alpha = a[i+i*lda];
 			a[i+i*lda] = T(1);
-			Reflector::Apply("L", false, false, m-i, n-i-1, &a[i+i*lda], 1, Traits<T>::conj(tau[i]), &a[i+(i+1)*lda], lda, work);
-			//ReflectorApply("L", m-i, n-i-1, &a[i+i*lda], 1, Traits<T>::conj(tau[i]), &a[i+(i+1)*lda], lda, work);
+			Reflector::Apply(
+				"L", false, false, m-i, n-i-1, &a[i+i*lda], 1,
+				Traits<T>::conj(tau[i]), &a[i+(i+1)*lda], lda, work
+			);
 			a[i+i*lda] = alpha;
 		}
 	}
 }
 
-// Computes a QR factorization of the m-by-n matrix a.
-// 
-// + tau should be length min(m,n)
-// + When 0 == *lwork or NULL == work, a workspace query is performed and
-//   the optimal lwork is placed back into lwork. Otherwise, lwork >= n.
-// + work should be of length lwork when not NULL.
-template <typename T> // _geqrf
-void Factor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work){
+///////////////////////////////////////////////////////////////////////
+// Factor
+// ------
+// Computes a QR factorization of an m-by-n matrix A = Q * R.
+// The matrix Q is represented as a product of elementary reflectors
+//   Q = H[1] H[2] ... H[k-1], where k = min(m,n).
+// Each H[i] has the form
+//   H[i] = I - tau * v * v^H
+// where tau is a scalar, and v is a vector with v[0..i] = 0 and
+// v[i] = 1; v[i+1..m] is stored, upon exit, in A[i+1..m,i], and
+// tau in tau[i].
+// Equivalent to Lapack routines _geqrf.
+//
+// Arguments
+// m     Number of rows of the matrix A.
+// n     Number of columns of the matrix A.
+// a     Pointer to the first element of A. On exit, the upper
+//       triangle of A contains the R factor, and the lower triangle
+//       stores the vectors v of the elementary reflectors.
+// lda   Leading dimension of the array containing A (lda >= m).
+// tau   Output vector of tau's.
+// lwork Length of workspace (>= n). If *lwork == 0 or NULL == work,
+//       then the optimal size is returned in this argument.
+// work  Workspace of size lwork.
+template <typename T>
+void Factor(
+	size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work
+){
 	RNPAssert(lda >= m);
 	RNPAssert(NULL != lwork);
 	const size_t k = (m < n ? m : n);
@@ -153,8 +187,40 @@ void Factor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work
 	}
 }
 
-// Unblocked version of QRMultQ, work is length:
-//   n if side is L, m if side is R
+
+
+///////////////////////////////////////////////////////////////////////
+// MultQ_unblocked
+// ---------------
+// From an existing QR factorization, multiplies a given matrix by the
+// unitary matrix Q. The given m-by-n matrix C is overwritten with:
+//
+//              |  side = "L"   | side = "R"
+// -------------|---------------|----------------
+// trans = "N"  |    Q * C      |   C * Q
+// trans = "C"  |    Q^H * C    |   C * Q^H
+//
+// This routine uses only level 2 BLAS.
+// Equivalent to Lapack routines _unm2r and _orm2r.
+//
+// Arguments
+// side  If "L", apply Q or Q^H from the left. If "R", apply Q or
+//       Q^H from the right.
+// trans If "N", apply Q. If "C", apply Q'.
+// m     Number of rows of the matrix C.
+// n     Number of columns of the matrix C.
+// k     Number of elementary reflectors to apply.
+//       If side = "L", k <= m. If side = "R", k <= n.
+// a     Pointer to the factorization. The i-th column should contain
+//       the vector which defines the i-th elementary reflector for
+//       i = 0..k.
+// lda   Leading dimension of the array containing A.
+//       If side = "L", lda >= m. If side = "R", lda >= n.
+// tau   Array of tau's, length k.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C.
+// work  Workspace.
+//       If side = "L", length n. If side = "R", length m.
 template <typename T> // _unmr2, _ormr2
 void MultQ_unblocked(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
@@ -218,7 +284,43 @@ void MultQ_unblocked(
 	}
 }
 
-template <typename T> // _unmqr, _ormqr
+
+
+///////////////////////////////////////////////////////////////////////
+// MultQ
+// -----
+// From an existing QR factorization, multiplies a given matrix by the
+// unitary matrix Q. The given m-by-n matrix C is overwritten with:
+//
+//              |  side = "L"   | side = "R"
+// -------------|---------------|----------------
+// trans = "N"  |    Q * C      |   C * Q
+// trans = "C"  |    Q^H * C    |   C * Q^H
+//
+// Equivalent to Lapack routines _unmqr and _ormqr.
+//
+// Arguments
+// side  If "L", apply Q or Q^H from the left. If "R", apply Q or
+//       Q^H from the right.
+// trans If "N", apply Q. If "C", apply Q'.
+// m     Number of rows of the matrix C.
+// n     Number of columns of the matrix C.
+// k     Number of elementary reflectors to apply.
+//       If side = "L", k <= m. If side = "R", k <= n.
+// a     Pointer to the factorization. The i-th column should contain
+//       the vector which defines the i-th elementary reflector for
+//       i = 0..k.
+// lda   Leading dimension of the array containing A.
+//       If side = "L", lda >= m. If side = "R", lda >= n.
+// tau   Array of tau's, length k.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C.
+// lwork Lenth of workspace.
+//       If side = "L", lwork >= n. If side = "R", lwork >= m.
+//       If *lwork == 0 or NULL == work, then the optimal size is
+//       returned in this argument.
+// work  Workspace of size lwork.
+template <typename T>
 void MultQ(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
 	const T *a, size_t lda, const T *tau, T *c, size_t ldc,
@@ -312,41 +414,31 @@ void MultQ(
 	}
 }
 
+///////////////////////////////////////////////////////////////////////
+// GenerateQ
+// ---------
+// From an existing QR factorization, generates the unitary matrix Q.
+// The original matrix containing the factorization is overwritten
+// by Q.
+// This routine uses only level 2 BLAS.
+// Equivalent to Lapack routines _ung2r and _org2r.
+//
+// Arguments
+// m     Number of rows of the matrix Q.
+// n     Number of columns of the matrix Q, m >= n.
+// k     Number of elementary reflectors, k <= n.
+// a     Pointer to the factorization. The i-th column should contain
+//       the vector which defines the i-th elementary reflector for
+//       i = 0..k. On exit, the matrix Q.
+// lda   Leading dimension of the array containing Q, lda >= m.
+// tau   Array of tau's, length k.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C.
+// work  Workspace of size n.
 template <class T> // _ung2r
 void GenerateQ_unblocked(
 	size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
 ){
-	// Generates an m by n complex matrix Q with orthonormal columns,
-	// which is defined as the first n columns of a product of k elementary
-	// reflectors of order m
-	//       Q  =  H[0] H[1] . . . H[k-1]
-	// as returned by QRFactor.
-	//
-	// Arguments
-	// =========
-	//
-	// m     The number of rows of the matrix Q. m >= 0
-	//
-	// n     The number of columns of the matrix Q. 0 <= n <= m
-	//
-	// k     The number of elementary reflectors whose product defines the
-	//       matrix Q. 0 <= k <= n
-	//
-	// A     (input/output) array, dimension (LDA,N)
-	//       On entry, the i-th column must contain the vector which
-	//       defines the elementary reflector H[i], for i = 0,1,...,k-1, as
-	//       returned by QRFactor in the first k columns of its array
-	//       argument A.
-	//       On exit, the m by n matrix Q.
-	//
-	// lda   (input) The leading dimension of the array A.
-	//
-	// tau   (input) array, length K
-	//       tau[i] must contain the scalar factor of the elementary
-	//       reflector H[i], as returned by QRFactor.
-	//
-	// work  (workspace) length n
-
 	if(n < 1){ return; }
 
 	// Initialise columns k+1:n to columns of the unit matrix
@@ -376,7 +468,30 @@ void GenerateQ_unblocked(
 	}
 }
 
-template <class T> // _ungqr
+///////////////////////////////////////////////////////////////////////
+// GenerateQ
+// ---------
+// From an existing QR factorization, generates the unitary matrix Q.
+// The original matrix containing the factorization is overwritten
+// by Q.
+// Equivalent to Lapack routines _ungqr and _orgqr.
+//
+// Arguments
+// m     Number of rows of the matrix Q.
+// n     Number of columns of the matrix Q, m >= n.
+// k     Number of elementary reflectors, k <= n.
+// a     Pointer to the factorization. The i-th column should contain
+//       the vector which defines the i-th elementary reflector for
+//       i = 0..k. On exit, the matrix Q.
+// lda   Leading dimension of the array containing Q, lda >= m.
+// tau   Array of tau's, length k.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C.
+// lwork Lenth of workspace, lwork >= n.
+//       If *lwork == 0 or NULL == work, then the optimal size is
+//       returned in this argument.
+// work  Workspace of size lwork.
+template <class T>
 void GenerateQ(
 	size_t m, size_t n, size_t k, T *a, size_t lda,
 	const T *tau, size_t *lwork, T *work
