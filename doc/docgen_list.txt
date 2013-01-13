@@ -1,1 +1,2 @@
+RNP/bits/BLAS_mix.hpp
 RNP/bits/QR.hpp

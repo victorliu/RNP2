@@ -1,6 +1,14 @@
 #ifndef RNP_BLAS_HPP_INCLUDED
 #define RNP_BLAS_HPP_INCLUDED
 
+///////////////////////////////////////////////////////////////////////
+// BLAS
+// ====
+// This file is used to select the underying BLAS implementation.
+// It is recommended that BLAS_mix.hpp be used, since using external
+// Level 1 BLAS tends to introduce interfacing subtleties.
+//
+
 // Select this line to use external BLAS
 //#include "bits/BLAS_ext.hpp"
 

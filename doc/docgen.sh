@@ -4,6 +4,8 @@
 # Assumes that Discount has been installed and is in the path.
 # Discount can be obtained here:
 #   http://www.pell.portland.or.us/~orc/Code/discount/
+# We further assume Discount has been compiled with all features on
+# (including definition lists, superscripts, and table-of-contents)
 #
 # We assume all relevant documentation is of the following format.
 # The first line of a documentation block starts with at least 8
@@ -14,6 +16,7 @@
 # first open curly brace.
 
 RNP_ROOT=..
+DOC_HTML_DIR=html
 
 for file in `cat docgen_list.txt`; do
 	#docgen_file.sh $file
@@ -26,6 +29,7 @@ for file in `cat docgen_list.txt`; do
 		!/^\/\//             { if(s==1) s=2 } # Stopped encountering 2 slashes
 		 /\{/                { b=1;          }
 		!/\{/                { b=0;          }
+		 /^#/                { s=0 } # If comment block precedes preprocessor directive, no prototype
 		{
 			if(s == 1){ print }
 			else if(s == 2){
@@ -34,8 +38,8 @@ for file in `cat docgen_list.txt`; do
 			if((s == 2) && (b == 1)){ s=0 }
 		}
 		' $RNP_ROOT/$file |
-	sed -e 's/{$//' | # strip off trailing open brace
-	sed -e 's/^\/\/ \?//' |
+	sed -e 's/{$//'       | # strip off trailing open brace
+	sed -e 's/^\/\/ \?//' | # Remove leading "// "
 	awk '# Format argument lists (s=2 within argument list)
 		BEGIN{ s=0 }
 		 /^Arguments/ { s=1 }
@@ -60,7 +64,16 @@ for file in `cat docgen_list.txt`; do
 		' > gen/$BSNM.txt
 	# Extract the title
 	TITLE=`grep -B1 "^==" gen/$BSNM.txt | head -n 1`
-	sed -e "s/{TITLE}/$TITLE/" docgen_header.txt > gen/$BSNM.html
-	markdown -f +toc -T gen/$BSNM.txt >> gen/$BSNM.html
-	cat docgen_footer.txt >> gen/$BSNM.html
+	sed -e "s/{TITLE}/$TITLE/" docgen_header.txt > $DOC_HTML_DIR/$BSNM.html
+	# Add id to first <ul> (from table of contents), and add class to sub <ul>'s
+	markdown -f +toc -T gen/$BSNM.txt |
+		sed -e '
+			0,/^<\/ul>/ s/^<ul>/<ul id=toc>/; s/^\(..*\)<ul>/\1<ul class="tocsub">/
+		' >> $DOC_HTML_DIR/$BSNM.html
+	cat docgen_footer.txt >> $DOC_HTML_DIR/$BSNM.html
 done
+
+TITLE="RNP"
+sed -e "s/{TITLE}/$TITLE/" docgen_header.txt > $DOC_HTML_DIR/index.html
+markdown index.txt >> $DOC_HTML_DIR/index.html
+cat docgen_footer.txt >> $DOC_HTML_DIR/index.html
