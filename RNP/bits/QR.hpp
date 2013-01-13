@@ -10,7 +10,6 @@
 
 namespace RNP{
 namespace LA{
-
 namespace QR{
 
 // Specialize this class to tune the block size.
@@ -25,8 +24,6 @@ struct Tuning{
 	static size_t genQ_block_size_min(size_t m, size_t n, size_t k){ return 64; }
 	static size_t genQ_crossover_size(size_t m, size_t n, size_t k){ return 64; }
 };
-
-} // namespace QR
 
 // Computes a QR factorization of a complex m by n matrix A = Q * R.
 
@@ -64,7 +61,7 @@ struct Tuning{
 // v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
 // and tau in TAU(i).
 template <typename T> // _geqr2
-void QRFactor_unblocked(size_t m, size_t n, T *a, size_t lda, T *tau, T *work){
+void Factor_unblocked(size_t m, size_t n, T *a, size_t lda, T *tau, T *work){
 	size_t k = m; if(n < k){ k = n; }
 	for(size_t i = 0; i < k; ++i){
 		// Generate elementary reflector H(i) to annihilate A(i+1:m,i)
@@ -90,7 +87,7 @@ void QRFactor_unblocked(size_t m, size_t n, T *a, size_t lda, T *tau, T *work){
 //   the optimal lwork is placed back into lwork. Otherwise, lwork >= n.
 // + work should be of length lwork when not NULL.
 template <typename T> // _geqrf
-void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work){
+void Factor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work){
 	RNPAssert(lda >= m);
 	RNPAssert(NULL != lwork);
 	const size_t k = (m < n ? m : n);
@@ -133,7 +130,7 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 		for(i = 0; i+nx < k; i += nb){
 			const size_t ib = (k-i < nb ? k-i : nb);
 			// Compute the QR factorization of the current block A[i..m,i..i+ib]
-			QRFactor_unblocked(m-i, ib, &a[i+i*lda], lda, &tau[i], work);
+			Factor_unblocked(m-i, ib, &a[i+i*lda], lda, &tau[i], work);
 			if(i+ib < n){
 				// Form the triangular factor of the block reflector
 				//   H = H[i] H[i+1] ...  H[i+ib-1]
@@ -152,14 +149,14 @@ void QRFactor(size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *wo
 		i = 0;
 	}
 	if(i < k){
-		QRFactor_unblocked(m-i, n-i, &a[i+i*lda], lda, &tau[i], work);
+		Factor_unblocked(m-i, n-i, &a[i+i*lda], lda, &tau[i], work);
 	}
 }
 
 // Unblocked version of QRMultQ, work is length:
 //   n if side is L, m if side is R
 template <typename T> // _unmr2, _ormr2
-void QRMultQ_unblocked(
+void MultQ_unblocked(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
 	const T *a, size_t lda, const T *tau, T *c, size_t ldc, T *work
 ){
@@ -222,13 +219,16 @@ void QRMultQ_unblocked(
 }
 
 template <typename T> // _unmqr, _ormqr
-void QRMultQ(
+void MultQ(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
 	const T *a, size_t lda, const T *tau, T *c, size_t ldc,
 	size_t *lwork, T *work
 ){
+	RNPAssert(ldc >= m);
 	if(0 == m || 0 == n || 0 == k){ return; }
 	const bool left = ('L' == side[0]);
+	RNPAssert((left && k <= m) || (!left && k <= n));
+	RNPAssert((left && lda >= m) || (!left && lda >= n));
 	const bool notran = ('N' == trans[0]);
 	const size_t nq = (left ? m : n);
 	const size_t nw = (left ? n : m);
@@ -261,7 +261,7 @@ void QRMultQ(
 	}
 	
 	if(nb < nbmin || nb >= k){ // unblocked
-		QRMultQ_unblocked(side, trans, m, n, k, a,lda, tau, c, ldc, work);
+		MultQ_unblocked(side, trans, m, n, k, a,lda, tau, c, ldc, work);
 	}else{
 		size_t ni, mi, ic, jc;
 		if(left){
@@ -313,7 +313,7 @@ void QRMultQ(
 }
 
 template <class T> // _ung2r
-void QRGenerateQ_unblocked(
+void GenerateQ_unblocked(
 	size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
 ){
 	// Generates an m by n complex matrix Q with orthonormal columns,
@@ -377,7 +377,7 @@ void QRGenerateQ_unblocked(
 }
 
 template <class T> // _ungqr
-void QRGenerateQ(
+void GenerateQ(
 	size_t m, size_t n, size_t k, T *a, size_t lda,
 	const T *tau, size_t *lwork, T *work
 ){
@@ -418,7 +418,7 @@ void QRGenerateQ(
 	}
 	//ki = nb;
 	if(kk < n){
-		QRGenerateQ_unblocked(m-kk, n-kk, k-kk, &a[kk+kk*lda], lda, &tau[kk], work);
+		GenerateQ_unblocked(m-kk, n-kk, k-kk, &a[kk+kk*lda], lda, &tau[kk], work);
 	}
 	if(kk > 0){
 		size_t i = ki;
@@ -429,7 +429,7 @@ void QRGenerateQ(
 				Reflector::ApplyBlock("L","N","F","C", m-i, n-i-ib, ib, &a[i+i*lda], lda, work, ldwork, &a[i+(i+ib)*lda], lda, &work[ib], ldwork);
 			}
 			// Apply H to rows 0..m of current block
-			QRGenerateQ_unblocked(m-i, ib, ib, &a[i+i*lda], lda, &tau[i], work);
+			GenerateQ_unblocked(m-i, ib, ib, &a[i+i*lda], lda, &tau[i], work);
 			// Set rows 0..i of current block to zero
 			for(size_t j = i; j < i+ib; ++j){
 				for(size_t l = 0; l < i; ++l){
@@ -441,6 +441,7 @@ void QRGenerateQ(
 	}
 }
 
+} // namespace QR
 } // namespace LA
 } // namespace RNP
 

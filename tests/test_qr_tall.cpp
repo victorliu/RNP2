@@ -42,9 +42,9 @@ void test_qr(size_t m, size_t n){
 	// Apply Q to the left of original A (use B for workspace)
 	RNP::BLAS::Copy(m, n, A, m, B, m);
 	delete [] work; work = NULL; lwork = 0;
-	RNP::LA::QR::MultQ("L", "C", m, n, m, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::QR::MultQ("L", "C", m, n, n, Afac, m, tau, B, m, &lwork, work);
 	work = new T[lwork];
-	RNP::LA::QR::MultQ("L", "C", m, n, m, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::QR::MultQ("L", "C", m, n, n, Afac, m, tau, B, m, &lwork, work);
 	
 	if(0){
 		std::cout << "Q' * origA:" << std::endl;
@@ -70,7 +70,7 @@ void test_qr(size_t m, size_t n){
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QR::MultQ("L", "N", m, n, m, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::QR::MultQ("L", "N", m, n, n, Afac, m, tau, B, m, &lwork, work);
 	if(0){
 		std::cout << "B = R*Q:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
@@ -99,7 +99,7 @@ void test_qr(size_t m, size_t n){
 		RNP::Matrix<T> mB(n, m, B, n);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QR::MultQ("R", "N", n, m, m, Afac, m, tau, B, n, &lwork, work);
+	RNP::LA::QR::MultQ("R", "N", n, m, n, Afac, m, tau, B, n, &lwork, work);
 	if(0){
 		std::cout << "B = R':" << std::endl;
 		RNP::Matrix<T> mB(n, m, B, n);
@@ -123,7 +123,7 @@ void test_qr(size_t m, size_t n){
 			B[i+j*n] = RNP::Traits<T>::conj(Afac[j+i*m]);
 		}
 	}
-	RNP::LA::QR::MultQ("R", "C", n, m, m, Afac, m, tau, B, n, &lwork, work);
+	RNP::LA::QR::MultQ("R", "C", n, m, n, Afac, m, tau, B, n, &lwork, work);
 	// We should recover A'
 	if(1){
 		T sum = 0;
@@ -138,12 +138,12 @@ void test_qr(size_t m, size_t n){
 	
 	// Make Q
 	T *Q = new T[m*m];
-	RNP::BLAS::Copy(m, m, Afac, m, Q, m);
+	RNP::BLAS::Copy(m, n, Afac, m, Q, m);
 	delete [] work; work = NULL; lwork = 0;
-	RNP::LA::QR::GenerateQ(m, m, m, Q, m, tau, &lwork, work);
+	RNP::LA::QR::GenerateQ(m, n, n, Q, m, tau, &lwork, work);
 	//lwork = n;
 	work = new T[lwork];
-	RNP::LA::QR::GenerateQ(m, m, m, Q, m, tau, &lwork, work);
+	RNP::LA::QR::GenerateQ(m, n, n, Q, m, tau, &lwork, work);
 	
 	if(0){
 		std::cout << "Q:" << std::endl;
@@ -153,25 +153,42 @@ void test_qr(size_t m, size_t n){
 	
 	// Form Q'*Q
 	T *QQ = new T[m*m];
-	RNP::BLAS::MultMM("C", "N", m, m, m, 1., Q, m, Q, m, 0., QQ, m);
+	RNP::BLAS::MultMM("C", "N", n, n, m, 1., Q, m, Q, m, 0., QQ, n);
 	
 	if(0){
 		std::cout << "Q' * Q:" << std::endl;
-		RNP::Matrix<T> mQQ(m, m, QQ, m);
+		RNP::Matrix<T> mQQ(n, n, QQ, n);
 		std::cout << RNP::IO::Chop(mQQ) << std::endl << std::endl;
 	}
 	
 	// Check to see if we get I
 	if(1){
 		T sum = 0;
-		for(size_t j = 0; j < m; ++j){
-			for(size_t i = 0; i < m; ++i){
+		for(size_t j = 0; j < n; ++j){
+			for(size_t i = 0; i < n; ++i){
 				T delta = (i == j ? 1 : 0);
-				sum += RNP::Traits<T>::abs(QQ[i+j*m] - delta);
+				sum += RNP::Traits<T>::abs(QQ[i+j*n] - delta);
 			}
 		}
 		std::cout << "Q' * Q - I norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
+	
+	// Generate the columns of Q corresponding to the nullspace of A'
+	RNP::BLAS::Set(m, m, T(0), T(1), Q, m);
+	RNP::LA::QR::MultQ("L", "N", m, m, n, Afac, m, tau, Q, m, &lwork, work);
+	
+	RNP::BLAS::MultMM("C", "N", n, m-n, m, T(1), A, m, &Q[0+n*m], m, T(0), QQ, n);
+	// Check to see if we get 0
+	if(1){
+		T sum = 0;
+		for(size_t j = 0; j < m-n; ++j){
+			for(size_t i = 0; i < n; ++i){
+				sum += RNP::Traits<T>::abs(QQ[i+j*n]);
+			}
+		}
+		std::cout << "A*Qn norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
+	}
+	
 	delete [] QQ;
 	delete [] Q;
 	delete [] B;
@@ -183,8 +200,8 @@ void test_qr(size_t m, size_t n){
 
 int main(){
 	srand(0);
-	size_t m = 166;
-	size_t n = 170; // must be larger than m
+	size_t m = 170; // must be larger than n
+	size_t n = 160;
 	test_qr<double>(m, n);
 	test_qr<std::complex<double> >(m, n);
 	return 0;
