@@ -33,8 +33,7 @@ void test_tridiag(size_t n){
 		std::cout << "Offdiag:\n" << IO::Chop(voffdiag) << std::endl;
 	}
 	
-	BLAS::Set(n, n, 0., 1., z, n);
-	LA::Tridiagonal::Util::SymmetricQRIteration(n, d, e, z, n, work);
+	LA::Tridiagonal::SymmetricEigensystem(n, d, e, z, n, work);
 	
 	// Form Z*Lambda*Z'
 	BLAS::Copy(n, n, z, n, work, n);
