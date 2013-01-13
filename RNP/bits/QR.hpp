@@ -13,8 +13,8 @@ namespace LA{
 namespace QR{
 
 ///////////////////////////////////////////////////////////////////////
-// QR
-// ==
+// RNP::LA::QR
+// ===========
 // Computes the QR factorization and operations involving Q.
 //
 // List of routines
@@ -25,6 +25,7 @@ namespace QR{
 // * MultQ
 // * GenerateQ_unblocked
 // * GenerateQ
+//
 
 ///////////////////////////////////////////////////////////////////////
 // Tuning
@@ -32,6 +33,7 @@ namespace QR{
 // Specialize this class to tune the block sizes. The optimal block
 // size should be greater than or equal to the minimum block size.
 // The value of the crossover determines when to enable blocking.
+//
 template <typename T>
 struct Tuning{
 	static size_t factor_block_size_opt(size_t m, size_t n){ return 64; }
@@ -68,6 +70,7 @@ struct Tuning{
 // lda  Leading dimension of the array containing A (lda >= m).
 // tau  Output vector of tau's.
 // work Workspace of size n.
+//
 template <typename T>
 void Factor_unblocked(
 	size_t m, size_t n, T *a, size_t lda, T *tau, T *work
@@ -118,6 +121,7 @@ void Factor_unblocked(
 // lwork Length of workspace (>= n). If *lwork == 0 or NULL == work,
 //       then the optimal size is returned in this argument.
 // work  Workspace of size lwork.
+//
 template <typename T>
 void Factor(
 	size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work
@@ -195,10 +199,10 @@ void Factor(
 // From an existing QR factorization, multiplies a given matrix by the
 // unitary matrix Q. The given m-by-n matrix C is overwritten with:
 //
-//              |  side = "L"   | side = "R"
-// -------------|---------------|----------------
-// trans = "N"  |    Q * C      |   C * Q
-// trans = "C"  |    Q^H * C    |   C * Q^H
+//    trans | side = "L"   | side = "R"
+//    ------|--------------|------------
+//     "N"  |   Q   * C    |  C * Q
+//     "C"  |   Q^H * C    |  C * Q^H
 //
 // This routine uses only level 2 BLAS.
 // Equivalent to Lapack routines _unm2r and _orm2r.
@@ -221,7 +225,8 @@ void Factor(
 // ldc   Leading dimension of the array containing C.
 // work  Workspace.
 //       If side = "L", length n. If side = "R", length m.
-template <typename T> // _unmr2, _ormr2
+//
+template <typename T>
 void MultQ_unblocked(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
 	const T *a, size_t lda, const T *tau, T *c, size_t ldc, T *work
@@ -292,10 +297,10 @@ void MultQ_unblocked(
 // From an existing QR factorization, multiplies a given matrix by the
 // unitary matrix Q. The given m-by-n matrix C is overwritten with:
 //
-//              |  side = "L"   | side = "R"
-// -------------|---------------|----------------
-// trans = "N"  |    Q * C      |   C * Q
-// trans = "C"  |    Q^H * C    |   C * Q^H
+//    trans | side = "L"   | side = "R"
+//    ------|--------------|------------
+//     "N"  |   Q   * C    |  C * Q
+//     "C"  |   Q^H * C    |  C * Q^H
 //
 // Equivalent to Lapack routines _unmqr and _ormqr.
 //
@@ -320,6 +325,7 @@ void MultQ_unblocked(
 //       If *lwork == 0 or NULL == work, then the optimal size is
 //       returned in this argument.
 // work  Workspace of size lwork.
+//
 template <typename T>
 void MultQ(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
@@ -435,7 +441,8 @@ void MultQ(
 // c     Pointer to the first element of the matrix C.
 // ldc   Leading dimension of the array containing C.
 // work  Workspace of size n.
-template <class T> // _ung2r
+//
+template <class T>
 void GenerateQ_unblocked(
 	size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
 ){
@@ -491,6 +498,7 @@ void GenerateQ_unblocked(
 //       If *lwork == 0 or NULL == work, then the optimal size is
 //       returned in this argument.
 // work  Workspace of size lwork.
+//
 template <class T>
 void GenerateQ(
 	size_t m, size_t n, size_t k, T *a, size_t lda,
