@@ -7,6 +7,7 @@
 #include "bits/LU.hpp"
 #include "bits/LU_obj.hpp"
 #include "bits/QR.hpp"
+#include "bits/QL.hpp"
 #include "bits/MatrixNormEstimates.hpp"
 #include "bits/Tridiagonal.hpp"
 
