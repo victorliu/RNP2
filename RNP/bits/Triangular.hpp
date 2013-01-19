@@ -1,22 +1,49 @@
 #ifndef RNP_TRIANGULAR_HPP_INCLUDED
 #define RNP_TRIANGULAR_HPP_INCLUDED
 
-#include <iostream>
 #include <cstddef>
+#include <RNP/Types.hpp>
 #include <RNP/BLAS.hpp>
 #include <RNP/Debug.hpp>
+
 
 namespace RNP{
 namespace LA{
 namespace Triangular{
 
-// Specialize this class to tune the block size.
+///////////////////////////////////////////////////////////////////////
+// RNP::LA::Triangular
+// ===================
+// Utility routines dealing with triangular matrices.
+//
+
+///////////////////////////////////////////////////////////////////////
+// Tuning
+// ------
+// Specialize this class to tune the block sizes.
+//
 template <typename T>
 struct Tuning{
 	static inline size_t invert_block_size(const char *uplo, const char *diag, size_t n){ return 64; }
 };
 
-template <typename T> // _trti2
+///////////////////////////////////////////////////////////////////////
+// Invert_unblocked
+// ----------------
+// Inverts a triangular matrix in-place.
+// This corresponds to Lapackk routines _trti2.
+// This routine uses only level 2 BLAS.
+//
+// Arguments
+// uplo If "U", the matrix is upper triangular.
+//      If "L", the matrix is lower triangular.
+// diag If "U", the matrix is assumed to have only 1's on the diagonal.
+//      If "N", the diagonal is given.
+// n   Number of rows and columns of the matrix.
+// a   Pointer to the first element of the matrix.
+// lda Leading dimension of the array containing the matrix, lda >= n.
+//
+template <typename T>
 void Invert_unblocked(
 	const char *uplo, const char *diag,
 	size_t n, T *a, size_t lda
@@ -58,7 +85,22 @@ void Invert_unblocked(
 	}
 }
 
-template <typename T> // _trtri
+///////////////////////////////////////////////////////////////////////
+// Invert
+// ------
+// Inverts a triangular matrix in-place.
+// This corresponds to Lapackk routines _trtri.
+//
+// Arguments
+// uplo If "U", the matrix is upper triangular.
+//      If "L", the matrix is lower triangular.
+// diag If "U", the matrix is assumed to have only 1's on the diagonal.
+//      If "N", the diagonal is given.
+// n   Number of rows and columns of the matrix.
+// a   Pointer to the first element of the matrix.
+// lda Leading dimension of the array containing the matrix, lda >= n.
+//
+template <typename T>
 int Invert(
 	const char *uplo, const char *diag,
 	size_t n, T *a, size_t lda
@@ -104,8 +146,31 @@ int Invert(
 	return 0;
 }
 
+///////////////////////////////////////////////////////////////////////
+// Copy
+// ----
+// Copies a triangular matrix.
+//
+// Arguments
+// uplo  If "U", the matrix is upper triangular.
+//       If "L", the matrix is lower triangular.
+// diag  If "U", the matrix is assumed to have only 1's on the diagonal.
+//       If "N", the diagonal is given.
+// m     Number of rows of the matrix.
+// n     Number of columns of the matrix.
+// src   Pointer to the first element of the source matrix.
+// ldsrc Leading dimension of the array containing the source
+//       matrix, ldsrc >= m.
+// dst   Pointer to the first element of the destination matrix.
+// lddst Leading dimension of the array containing the destination
+//       matrix, lddst >= m.
+//
 template <typename T>
-void Copy(const char *uplo, const char *diag, size_t m, size_t n, const T* RNP_RESTRICT src, size_t ldsrc, T* RNP_RESTRICT dst, size_t lddst){
+void Copy(
+	const char *uplo, const char *diag, size_t m, size_t n,
+	const T* src, size_t ldsrc,
+	T* dst, size_t lddst
+){
 	if('L' == uplo[0]){
 		for(size_t j = 0; j < n; ++j){
 			size_t i0 = ('N' == diag[0] ? j : j+1);
