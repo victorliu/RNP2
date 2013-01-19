@@ -8,6 +8,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+
+#define RNP_RESTRICT __restrict
+
 #include <RNP/Debug.hpp>
 
 namespace RNP{
