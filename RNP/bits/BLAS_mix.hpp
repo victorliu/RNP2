@@ -2,7 +2,7 @@
 #define RNP_BLAS_MIX_HPP_INCLUDED
 
 ///////////////////////////////////////////////////////////////////////
-// BLAS (mixed implementation)
+// RNP::BLAS (mixed implementation)
 // ===========================
 // This header provides templated implementations of low level BLAS
 // and declares prototypes to call external BLAS for high level
@@ -95,8 +95,6 @@
 #include <cstring>
 #include <RNP/Types.hpp>
 #include <RNP/Debug.hpp>
-
-#define RNP_RESTRICT __restrict
 
 namespace RNP{
 namespace BLAS{
@@ -216,7 +214,7 @@ void Copy(
 	}else if('C' == trans[0]){
 		for(size_t j = 0; j < n; ++j){
 			for(size_t i = 0; i < m; ++i){
-				dst[j+i*lddst] = Traits<T>::conj(src[i+j*ldsrc]);
+				dst[j+i*lddst] = Traits<TS>::conj(src[i+j*ldsrc]);
 			}
 		}
 	}
@@ -423,8 +421,8 @@ typename Traits<T>::real_type Norm1(
 //
 template <typename T>
 void RotGen(
-	* RNP_RESTRICT a, const T &b,
-	typename Traits<T>::real_type* RNP_RESTRICT c, T* RNP_RESTRICT s
+	T *a, const T &b,
+	typename Traits<T>::real_type* c, T* s
 ){
 	typedef typename Traits<T>::real_type real_type;
 	real_type absa = Traits<T>::abs(*a);
@@ -789,7 +787,7 @@ size_t MaximumIndex(size_t n, const T* RNP_RESTRICT x, size_t incx){
 // ------
 // Computes the product of a general rectangular matrix with a vector.
 //
-// y <- alpha * op(A) * x + beta * y
+//     y <- alpha * op(A) * x + beta * y
 //
 // Arguments
 // trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
@@ -832,7 +830,7 @@ void MultMV(const char *trans, size_t m, size_t n,
 // -----------
 // Computes the product of a banded rectangular matrix with a vector.
 //
-// y <- alpha * op(A) * x + beta * y
+//     y <- alpha * op(A) * x + beta * y
 //
 // Arguments
 // trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
@@ -881,7 +879,7 @@ void MultBandedV(
 // ---------
 // Computes the product of a Hermitian square matrix with a vector.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -924,7 +922,7 @@ void MultHermV(const char *uplo, size_t n,
 // ---------------
 // Computes the product of a Hermitian banded matrix with a vector.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -969,7 +967,7 @@ void MultBandedHermV(const char *uplo, size_t n, size_t k,
 // Computes the product of a Hermitian square matrix with a vector.
 // The Hermitian matrix is assumed to be in packed form.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -1017,7 +1015,7 @@ void MultPackedHermV(const char *uplo, size_t n,
 // --------
 // Computes the product of a symmetric square matrix with a vector.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -1062,7 +1060,7 @@ void MultSymV(const char *uplo, size_t n,
 // --------------
 // Computes the product of a symmetric banded matrix with a vector.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -1109,7 +1107,7 @@ void MultBandedSymV(const char *uplo, size_t n, size_t k,
 // Computes the product of a symmetric square matrix with a vector.
 // The symmetric matrix is assumed to be in packed form.
 //
-// y <- alpha * A * x + beta * y
+//     y <- alpha * A * x + beta * y
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -1159,7 +1157,7 @@ void MultPackedSymV(const char *uplo, size_t n,
 // -------
 // Computes the product of a triangular matrix with a vector.
 //
-// x <- op(A) * x
+//     x <- op(A) * x
 //
 // Arguments
 // uplo  If "U", the upper triangle of A is given.
@@ -1185,6 +1183,27 @@ void MultTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, const std::complex<double> *a, size_t lda,
 	std::complex<double> *x, size_t incx);
 
+///////////////////////////////////////////////////////////////////////
+// MultBandedTrV
+// -------------
+// Computes the product of a banded triangular matrix with a vector.
+//
+//     x <- op(A) * x
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag  If "U", the diagonal of A is assumed to be all 1's.
+//       If "N", the diagonal of A is given.
+// n     Number of rows and columns of A.
+// k     Bandwidth of A (not counting the diagonal), k >= 0.
+// a     Pointer to the first element of A.
+// lda   Leading dimension of the array containing A, lda >= n.
+// x     Pointer to the first element of the x vector. On exit, it is
+//       overwritten by op(A) * x.
+// incx  Increment between elements of the x vector, incx > 0.
+//
 void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, size_t k, const float *a, size_t lda,
 	float *x, size_t incx);
@@ -1198,6 +1217,32 @@ void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, size_t k, const std::complex<double> *a, size_t lda,
 	std::complex<double> *x, size_t incx);
 
+///////////////////////////////////////////////////////////////////////
+// MultPackedTrV
+// -------------
+// Computes the product of a packed triangular matrix with a vector.
+//
+//     x <- op(A) * x
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag  If "U", the diagonal of A is assumed to be all 1's.
+//       If "N", the diagonal of A is given.
+// n     Number of rows and columns of A.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+// lda   Leading dimension of the array containing A, lda >= n.
+// x     Pointer to the first element of the x vector. On exit, it is
+//       overwritten by op(A) * x.
+// incx  Increment between elements of the x vector, incx > 0.
+//
 void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, const float *ap, float *x, size_t incx);
 void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
@@ -1241,6 +1286,28 @@ void SolveTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, const std::complex<double> *a, size_t lda,
 	std::complex<double> *x, size_t incx);
 
+///////////////////////////////////////////////////////////////////////
+// SolveBandedTrV
+// --------------
+// Computes the product of the inverse of a banded triangular matrix
+// with a vector. Solves for x in
+//
+//     op(A) * x = y
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag  If "U", the diagonal of A is assumed to be all 1's.
+//       If "N", the diagonal of A is given.
+// n     Number of rows and columns of A.
+// k     Bandwidth of A (not counting the diagonal), k >= 0.
+// a     Pointer to the first element of A.
+// lda   Leading dimension of the array containing A, lda >= n.
+// x     Pointer to the first element of the y vector. On exit, it is
+//       overwritten by the solution x.
+// incx  Increment between elements of the x vector, incx > 0.
+//
 void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, size_t k, const float *a, size_t lda, float *x, size_t incx);
 void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
@@ -1252,6 +1319,33 @@ void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, size_t k, const std::complex<double> *a, size_t lda,
 	std::complex<double> *x, size_t incx);
 
+///////////////////////////////////////////////////////////////////////
+// SolvePackedTrV
+// --------------
+// Computes the product of the inverse of a packed triangular matrix
+// with a vector. Solves for x in
+//
+//     op(A) * x = y
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag  If "U", the diagonal of A is assumed to be all 1's.
+//       If "N", the diagonal of A is given.
+// n     Number of rows and columns of A.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+// lda   Leading dimension of the array containing A, lda >= n.
+// x     Pointer to the first element of the x vector. On exit, it is
+//       overwritten by op(A) * x.
+// incx  Increment between elements of the x vector, incx > 0.
+//
 void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, const float *ap, float *x, size_t incx);
 void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
@@ -1263,6 +1357,24 @@ void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
 	size_t n, const std::complex<double> *ap,
 	std::complex<double> *x, size_t incx);
 
+///////////////////////////////////////////////////////////////////////
+// Rank1Update
+// -----------
+// Computes a rank-1 update to a general rectangular matrix.
+//
+//     A <- alpha * x * y^T + A
+//
+// Arguments
+// m     Number of rows of A.
+// n     Number of columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length m.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector, length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= m.
+//
 void Rank1Update(size_t m, size_t n, const float &alpha,
 	const float *x, size_t incx, const float *y, size_t incy,
 	float *a, size_t lda);
@@ -1278,6 +1390,26 @@ void Rank1Update(size_t m, size_t n, const std::complex<double> &alpha,
 	const std::complex<double> *y, size_t incy,
 	std::complex<double> *a, size_t lda);
 
+///////////////////////////////////////////////////////////////////////
+// ConjugateRank1Update
+// --------------------
+// Computes a rank-1 update to a general rectangular matrix, where the
+// row vector is conjugated.
+//
+//     A <- alpha * x * y^H + A
+//
+// Arguments
+// m     Number of rows of A.
+// n     Number of columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length m.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector (conjugated),
+//       length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= m.
+//
 void ConjugateRank1Update(size_t m, size_t n, const float &alpha,
 	const float *x, size_t incx, const float *y, size_t incy,
 	float *a, size_t lda);
@@ -1295,6 +1427,24 @@ void ConjugateRank1Update(size_t m, size_t n,
 	const std::complex<double> *y, size_t incy,
 	std::complex<double> *a, size_t lda);
 
+///////////////////////////////////////////////////////////////////////
+// HermRank1Update
+// ---------------
+// Computes a rank-1 update to a Hermitian square matrix, where the
+// row vector is conjugated.
+//
+//     A <- alpha * x * x^H + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= n.
+//
 void HermRank1Update(const char *uplo, size_t n, const float &alpha,
 	const float *x, size_t incx, float *a, size_t lda);
 void HermRank1Update(const char *uplo, size_t n, const double &alpha,
@@ -1306,37 +1456,129 @@ void HermRank1Update(const char *uplo, size_t n, const double &alpha,
 	const std::complex<double> *x, size_t incx,
 	std::complex<double> *a, size_t lda);
 
+///////////////////////////////////////////////////////////////////////
+// PackedHermRank1Update
+// ---------------------
+// Computes a rank-1 update to a Hermitian square matrix, where the
+// row vector is conjugated. The matrix is stored in packed format.
+//
+//     A <- alpha * x * x^H + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+//
 void PackedHermRank1Update(const char *uplo, size_t n, const float &alpha,
-	const float *x, size_t incx, float *a);
+	const float *x, size_t incx, float *ap);
 void PackedHermRank1Update(const char *uplo, size_t n, const double &alpha,
-	const double *x, size_t incx, double *a);
+	const double *x, size_t incx, double *ap);
 void PackedHermRank1Update(const char *uplo, size_t n, const float &alpha,
-	const std::complex<float> *x, size_t incx, std::complex<float> *a);
+	const std::complex<float> *x, size_t incx, std::complex<float> *ap);
 void PackedHermRank1Update(const char *uplo, size_t n, const double &alpha,
-	const std::complex<double> *x, size_t incx, std::complex<double> *a);
+	const std::complex<double> *x, size_t incx, std::complex<double> *ap);
 
+///////////////////////////////////////////////////////////////////////
+// HermRank2Update
+// ---------------
+// Computes a rank-2 update to a Hermitian square matrix.
+//
+//     A <- alpha * x * y^H + conj(alpha) * y * x^H + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector, length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= n.
+//
 void HermRank2Update(const char *uplo, size_t n, const float &alpha,
 	const float *x, size_t incx, const float *y, size_t incy,
 	float *a, size_t lda);
 void HermRank2Update(const char *uplo, size_t n, const double &alpha,
 	const double *x, size_t incx, const double *y, size_t incy,
 	double *a, size_t lda);
-void HermRank2Update(const char *uplo, size_t n, const std::complex<float> &alpha,
-	const std::complex<float> *x, size_t incx, const std::complex<float> *y, size_t incy,
+void HermRank2Update(const char *uplo, size_t n,
+	const std::complex<float> &alpha,
+	const std::complex<float> *x, size_t incx,
+	const std::complex<float> *y, size_t incy,
 	std::complex<float> *a, size_t lda);
-void HermRank2Update(const char *uplo, size_t n, const std::complex<double> &alpha,
-	const std::complex<double> *x, size_t incx, const std::complex<double> *y, size_t incy,
+void HermRank2Update(const char *uplo, size_t n,
+	const std::complex<double> &alpha,
+	const std::complex<double> *x, size_t incx,
+	const std::complex<double> *y, size_t incy,
 	std::complex<double> *a, size_t lda);
 
+///////////////////////////////////////////////////////////////////////
+// PackedHermRank2Update
+// ---------------------
+// Computes a rank-2 update to a Hermitian square matrix.
+// The matrix is stored in packed format.
+//
+//     A <- alpha * x * y^H + conj(alpha) * y * x^H + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector, length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+//
 void PackedHermRank2Update(const char *uplo, size_t n, const float &alpha,
-	const float *x, size_t incx, const float *y, size_t incy, float *a);
+	const float *x, size_t incx, const float *y, size_t incy, float *ap);
 void PackedHermRank2Update(const char *uplo, size_t n, const double &alpha,
-	const double *x, size_t incx, const double *y, size_t incy, double *a);
-void PackedHermRank2Update(const char *uplo, size_t n, const std::complex<float> &alpha,
-	const std::complex<float> *x, size_t incx, const std::complex<float> *y, size_t incy, std::complex<float> *a);
-void PackedHermRank2Update(const char *uplo, size_t n, const std::complex<double> &alpha,
-	const std::complex<double> *x, size_t incx, const std::complex<double> *y, size_t incy, std::complex<double> *a);
+	const double *x, size_t incx, const double *y, size_t incy, double *ap);
+void PackedHermRank2Update(const char *uplo, size_t n,
+	const std::complex<float> &alpha,
+	const std::complex<float> *x, size_t incx, const std::complex<float> *y,
+	size_t incy, std::complex<float> *ap);
+void PackedHermRank2Update(const char *uplo, size_t n,
+	const std::complex<double> &alpha,
+	const std::complex<double> *x, size_t incx, const std::complex<double> *y,
+	size_t incy, std::complex<double> *ap);
 
+///////////////////////////////////////////////////////////////////////
+// SymRank1Update
+// --------------
+// Computes a rank-1 update to a symmetric square matrix.
+//
+//     A <- alpha * x * x^T + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= n.
+//
 void SymRank1Update(const char *uplo, size_t n, const float &alpha,
 	const float *x, size_t incx, float *a, size_t lda);
 void SymRank1Update(const char *uplo, size_t n, const double &alpha,
@@ -1348,17 +1590,61 @@ void SymRank1Update(const char *uplo, size_t n, const std::complex<double> &alph
 	const std::complex<double> *x, size_t incx, std::complex<double> *a, size_t lda);
 */
 
+///////////////////////////////////////////////////////////////////////
+// PackedSymRank1Update
+// --------------------
+// Computes a rank-1 update to a symmetric square matrix.
+// The matrix is stored in packed format.
+//
+//     A <- alpha * x * x^T + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 update.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+//
 void PackedSymRank1Update(const char *uplo, size_t n, const float &alpha,
 	const float *x, size_t incx, float *a);
 void PackedSymRank1Update(const char *uplo, size_t n, const double &alpha,
 	const double *x, size_t incx, double *a);
 /*
-void PackedSymRank1Update(const char *uplo, size_t n, const std::complex<float> &alpha,
+void PackedSymRank1Update(const char *uplo, size_t n,
+	const std::complex<float> &alpha,
 	const std::complex<float> *x, size_t incx, std::complex<float> *a);
-void PackedSymRank1Update(const char *uplo, size_t n, const std::complex<double> &alpha,
+void PackedSymRank1Update(const char *uplo, size_t n,
+	const std::complex<double> &alpha,
 	const std::complex<double> *x, size_t incx, std::complex<double> *a);
 */
 
+///////////////////////////////////////////////////////////////////////
+// SymRank2Update
+// --------------
+// Computes a rank-2 update to a symmetric square matrix.
+//
+//     A <- alpha * x * y^T + alpha * y * x^T + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector, length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A, lda >= n.
+//
 void SymRank2Update(const char *uplo, size_t n, const float &alpha,
 	const float *x, size_t incx, const float *y, size_t incy,
 	float *a, size_t lda);
@@ -1366,23 +1652,56 @@ void SymRank2Update(const char *uplo, size_t n, const double &alpha,
 	const double *x, size_t incx, const double *y, size_t incy,
 	double *a, size_t lda);
 /*
-void SymRank2Update(const char *uplo, size_t n, const std::complex<float> &alpha,
-	const std::complex<float> *x, size_t incx, const std::complex<float> *y, size_t incy,
+void SymRank2Update(const char *uplo, size_t n,
+	const std::complex<float> &alpha,
+	const std::complex<float> *x, size_t incx,
+	const std::complex<float> *y, size_t incy,
 	std::complex<float> *a, size_t lda);
-void SymRank2Update(const char *uplo, size_t n, const std::complex<double> &alpha,
-	const std::complex<double> *x, size_t incx, const std::complex<double> *y, size_t incy,
+void SymRank2Update(const char *uplo, size_t n,
+	const std::complex<double> &alpha,
+	const std::complex<double> *x, size_t incx,
+	const std::complex<double> *y, size_t incy,
 	std::complex<double> *a, size_t lda);
 */
 
+///////////////////////////////////////////////////////////////////////
+// PackedSymRank2Update
+// --------------------
+// Computes a rank-2 update to a symmetric square matrix.
+// The matrix is stored in packed format.
+//
+//     A <- alpha * x * y^T + alpha * y * x^T + A
+//
+// Arguments
+// uplo  If "U", the upper triangle of A is given.
+//       If "L", the lower triangle of A is given.
+// n     Number of rows and columns of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// x     Pointer to the first element of the x vector, length n.
+// incx  Increment between elements of the x vector, incx > 0.
+// y     Pointer to the first element of the y vector, length n.
+// incy  Increment between elements of the y vector, incy > 0.
+// ap    Pointer to the first element of A, length n*(n+1)/2.
+//       If uplo = "U", the columns of the upper triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+//       and ap[2] is A[1,1], etc.
+//       If uplo = "L", the columns of the lower triangle of A are
+//       stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+//       and ap[2] is A[2,0], etc.
+//
 void PackedSymRank2Update(const char *uplo, size_t n, const float &alpha,
-	const float *x, size_t incx, const float *y, size_t incy, float *a);
+	const float *x, size_t incx, const float *y, size_t incy, float *ap);
 void PackedSymRank2Update(const char *uplo, size_t n, const double &alpha,
-	const double *x, size_t incx, const double *y, size_t incy, double *a);
+	const double *x, size_t incx, const double *y, size_t incy, double *ap);
 /*
-void PackedSymRank2Update(const char *uplo, size_t n, const std::complex<float> &alpha,
-	const std::complex<float> *x, size_t incx, const std::complex<float> *y, size_t incy, std::complex<float> *a);
-void PackedSymRank2Update(const char *uplo, size_t n, const std::complex<double> &alpha,
-	const std::complex<double> *x, size_t incx, const std::complex<double> *y, size_t incy, std::complex<double> *a);
+void PackedSymRank2Update(const char *uplo, size_t n,
+const std::complex<float> &alpha,
+	const std::complex<float> *x, size_t incx,
+	const std::complex<float> *y, size_t incy, std::complex<float> *ap);
+void PackedSymRank2Update(const char *uplo, size_t n,
+const std::complex<double> &alpha,
+	const std::complex<double> *x, size_t incx,
+	const std::complex<double> *y, size_t incy, std::complex<double> *ap);
 */
 
 
@@ -1429,6 +1748,32 @@ void MultMM(
 	const std::complex<double> *b, size_t ldb,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// MultSymM
+// --------
+// Computes the product of a symmetric square matrix with a general
+// rectangular matrix
+//
+//     C = alpha * A * B + beta * C     if side = "L"
+//     C = alpha * B * A + beta * C     if side = "R"
+//
+// Arguments
+// side   If "L", the symmetric matrix A is applied from the left.
+//        If "R", the symmetric matrix A is applied from the right.
+// uplo   If "U", the upper triangle of C is given.
+//        If "L", the upper triangle of C is given.
+// m      Number of rows of C.
+// n      Number of columns of C.
+// alpha  Scale factor to apply to the product.
+// a      Pointer to the first element of the symmetric matrix A.
+// lda    Leading dimension of the array containing A.
+//        If side = "L", lda >= m, otherwise lda >= n.
+// b      Pointer to the first element of B.
+// ldb    Leading dimension of the array containing B, ldb >= m.
+// beta   Scale factor to apply to C.
+// c      Pointer to the first element of C.
+// ldc    Leading dimension of the array containing C, ldc >= m.
+//
 void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
 	const float &alpha, const float *a, size_t lda, const float *b, size_t ldb,
 	const float &beta, float *c, size_t ldc);
@@ -1444,6 +1789,32 @@ void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
 	const std::complex<double> *b, size_t ldb,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// MultHermM
+// ---------
+// Computes the product of a Hermitian square matrix with a general
+// rectangular matrix
+//
+//     C = alpha * A * B + beta * C     if side = "L"
+//     C = alpha * B * A + beta * C     if side = "R"
+//
+// Arguments
+// side   If "L", the Hermitian matrix A is applied from the left.
+//        If "R", the Hermitian matrix A is applied from the right.
+// uplo   If "U", the upper triangle of C is given.
+//        If "L", the upper triangle of C is given.
+// m      Number of rows of C.
+// n      Number of columns of C.
+// alpha  Scale factor to apply to the product.
+// a      Pointer to the first element of the Hermitian matrix A.
+// lda    Leading dimension of the array containing A.
+//        If side = "L", lda >= m, otherwise lda >= n.
+// b      Pointer to the first element of B.
+// ldb    Leading dimension of the array containing B, ldb >= m.
+// beta   Scale factor to apply to C.
+// c      Pointer to the first element of C.
+// ldc    Leading dimension of the array containing C, ldc >= m.
+//
 void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
 	const float &alpha, const float *a, size_t lda, const float *b, size_t ldb,
 	const float &beta, float *c, size_t ldc);
@@ -1459,6 +1830,28 @@ void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
 	const std::complex<double> *b, size_t ldb,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// SymRankKUpdate
+// --------------
+// Computes a rank-k update to a symmetric square matrix.
+//
+//     C <- alpha * op(A) * op(A)^T + beta * C
+//
+// Arguments
+// uplo  If "U", the upper triangle of C is given.
+//       If "L", the lower triangle of C is given.
+// trans If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// n     Number of rows and columns of C.
+// k     If trans = "N", k is the number of columns of A, otherwise
+//       it is the number of rows of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A.
+//       If trans = "N", lda >= n, otherwise lda >= k.
+// beta  Scale factor to apply to C.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C, ldc >= n.
+//
 void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const float &alpha, const float *a, size_t lda,
 	const float &beta, float *c, size_t ldc);
@@ -1472,6 +1865,28 @@ void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const std::complex<double> &alpha, const std::complex<double> *a, size_t lda,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// HermRankKUpdate
+// ---------------
+// Computes a rank-k update to a Hermitian square matrix.
+//
+//     C <- alpha * op(A) * op(A)^H + beta * C
+//
+// Arguments
+// uplo  If "U", the upper triangle of C is given.
+//       If "L", the lower triangle of C is given.
+// trans If "N", op(A) = A. If "C", op(A) = A^H.
+// n     Number of rows and columns of C.
+// k     If trans = "N", k is the number of columns of A, otherwise
+//       it is the number of rows of A.
+// alpha Scale factor to apply to the rank-1 updates.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A.
+//       If trans = "N", lda >= n, otherwise lda >= k.
+// beta  Scale factor to apply to C.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C, ldc >= n.
+//
 void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const float &alpha, const float *a, size_t lda,
 	const float &beta, float *c, size_t ldc);
@@ -1485,6 +1900,36 @@ void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const double &alpha, const std::complex<double> *a, size_t lda,
 	const double &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// SymRank2KUpdate
+// ---------------
+// Computes a rank-2k update to a symmetric square matrix.
+//
+//     C <- alpha * A * B^T + alpha * B * A^T + beta * C
+//
+// or
+//
+//     C <- alpha * A^T * B + alpha * B^T * A + beta * C
+//
+// Arguments
+// uplo  If "U", the upper triangle of C is given.
+//       If "L", the lower triangle of C is given.
+// trans If "N", then C <- alpha * A * B^T + alpha * B * A^T + beta * C
+//       If "T", then C <- alpha * A^T * B + alpha * B^T * A + beta * C
+// n     Number of rows and columns of C.
+// k     If trans = "N", k is the number of columns of A and B,
+//       otherwise it is the number of rows of A and B.
+// alpha Scale factor to apply to the rank-1 updates.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A.
+//       If trans = "N", lda >= n, otherwise lda >= k.
+// b     Pointer to the first element of the matrix B.
+// ldb   Leading dimension of the array containing B.
+//       If trans = "N", lda >= n, otherwise ldb >= k.
+// beta  Scale factor to apply to C.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C, ldc >= n.
+//
 void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const float &alpha, const float *a, size_t lda,
 	const float *b, size_t ldb,
@@ -1502,6 +1947,36 @@ void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const std::complex<double> *b, size_t ldb,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
+///////////////////////////////////////////////////////////////////////
+// HermRank2KUpdate
+// ----------------
+// Computes a rank-2k update to a Hermitian square matrix.
+//
+//     C <- alpha * A * B^H + conj(alpha) * B * A^H + beta * C
+//
+// or
+//
+//     C <- alpha * A^H * B + conj(alpha) * B^H * A + beta * C
+//
+// Arguments
+// uplo  If "U", the upper triangle of C is given.
+//       If "L", the lower triangle of C is given.
+// trans If "N", then C <- alpha * A * B^H + conj(alpha) * B * A^H + beta * C
+//       If "C", then C <- alpha * A^H * B + conj(alpha) * B^H * A + beta * C
+// n     Number of rows and columns of C.
+// k     If trans = "N", k is the number of columns of A and B,
+//       otherwise it is the number of rows of A and B.
+// alpha Scale factor to apply to the rank-1 updates.
+// a     Pointer to the first element of the matrix A.
+// lda   Leading dimension of the array containing A.
+//       If trans = "N", lda >= n, otherwise lda >= k.
+// b     Pointer to the first element of the matrix B.
+// ldb   Leading dimension of the array containing B.
+//       If trans = "N", lda >= n, otherwise ldb >= k.
+// beta  Scale factor to apply to C.
+// c     Pointer to the first element of the matrix C.
+// ldc   Leading dimension of the array containing C, ldc >= n.
+//
 void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const float &alpha, const float *a, size_t lda,
 	const float *b, size_t ldb,
@@ -1519,30 +1994,96 @@ void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const std::complex<double> *b, size_t ldb,
 	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
 
-void MultTrM(const char *side, const char *uplo, const char *trans, const char *diag,
+///////////////////////////////////////////////////////////////////////
+// MultTrM
+// --------
+// Computes the product of a triangular matrix with a general
+// rectangular matrix.
+//
+//     B <- alpha * op(A) * B     or     B <- alpha * B * op(A)
+//
+// Arguments
+// side   If "L", then op(A) is applied from the left.
+//        If "R", then op(A) is applied from the right.
+// uplo   If "U", then A is upper triangular.
+//        If "L", then A is upper triangular.
+// trans  If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag   If "U", the diagonal of A is assumed to be all 1's.
+//        If "N", the digonal of A is given.
+// m      Number of rows of B, and the dimension of A when side = "L".
+// n      Number of columns of B, and the dimension of A when
+//        side = "R".
+// alpha  Scale factor to apply.
+// a      Pointer to the first element of A.
+// lda    Leading dimension of the array containing A.
+//        If trans = "N", lda >= m, otherwise lda >= n.
+// b      Pointer to the first element of B. On exit, B is overwritten
+//        with the product.
+// ldb    Leading dimension of the array containing B, ldb >= m.
+//
+void MultTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
 	size_t m, size_t n, const float &alpha, const float *a, size_t lda,
 	float *b, size_t ldb);
-void MultTrM(const char *side, const char *uplo, const char *trans, const char *diag,
+void MultTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
 	size_t m, size_t n, const double &alpha, const double *a, size_t lda,
 	double *b, size_t ldb);
-void MultTrM(const char *side, const char *uplo, const char *trans, const char *diag,
-	size_t m, size_t n, const std::complex<float> &alpha, const std::complex<float> *a, size_t lda,
+void MultTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
+	size_t m, size_t n, const std::complex<float> &alpha,
+	const std::complex<float> *a, size_t lda,
 	std::complex<float> *b, size_t ldb);
-void MultTrM(const char *side, const char *uplo, const char *trans, const char *diag,
-	size_t m, size_t n, const std::complex<double> &alpha, const std::complex<double> *a, size_t lda,
+void MultTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
+	size_t m, size_t n, const std::complex<double> &alpha,
+	const std::complex<double> *a, size_t lda,
 	std::complex<double> *b, size_t ldb);
 
-void SolveTrM(const char *side, const char *uplo, const char *trans, const char *diag,
+///////////////////////////////////////////////////////////////////////
+// SolveTrM
+// --------
+// Computes the product of the inverse of a triangular matrix with a
+// general rectangular matrix. Solves:
+//
+//     op(A) * X = alpha * B     or     X * op(A) = alpha * B
+//
+// Arguments
+// side   If "L", then op(A) and its inverse is applied from the left.
+//        If "R", then op(A) and its inverse is applied from the right.
+// uplo   If "U", then A is upper triangular.
+//        If "L", then A is upper triangular.
+// trans  If "N", op(A) = A. If "T", op(A) = A^T. If "C", op(A) = A^H.
+// diag   If "U", the diagonal of A is assumed to be all 1's.
+//        If "N", the digonal of A is given.
+// m      Number of rows of B, and the dimension of A when side = "L".
+// n      Number of columns of B, and the dimension of A when
+//        side = "R".
+// alpha  Scale factor to apply.
+// a      Pointer to the first element of A.
+// lda    Leading dimension of the array containing A.
+//        If trans = "N", lda >= m, otherwise lda >= n.
+// b      Pointer to the first element of B. On exit, B is overwritten
+//        with the result X.
+// ldb    Leading dimension of the array containing B, ldb >= m.
+//
+void SolveTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
 	size_t m, size_t n, const float &alpha, const float *a, size_t lda,
 	float *b, size_t ldb);
-void SolveTrM(const char *side, const char *uplo, const char *trans, const char *diag,
+void SolveTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
 	size_t m, size_t n, const double &alpha, const double *a, size_t lda,
 	double *b, size_t ldb);
-void SolveTrM(const char *side, const char *uplo, const char *trans, const char *diag,
-	size_t m, size_t n, const std::complex<float> &alpha, const std::complex<float> *a, size_t lda,
+void SolveTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
+	size_t m, size_t n, const std::complex<float> &alpha,
+	const std::complex<float> *a, size_t lda,
 	std::complex<float> *b, size_t ldb);
-void SolveTrM(const char *side, const char *uplo, const char *trans, const char *diag,
-	size_t m, size_t n, const std::complex<double> &alpha, const std::complex<double> *a, size_t lda,
+void SolveTrM(
+	const char *side, const char *uplo, const char *trans, const char *diag,
+	size_t m, size_t n, const std::complex<double> &alpha,
+	const std::complex<double> *a, size_t lda,
 	std::complex<double> *b, size_t ldb);
 
 #undef RNP_RESTRICT
