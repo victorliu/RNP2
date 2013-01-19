@@ -17,6 +17,7 @@
 
 RNP_ROOT=..
 DOC_HTML_DIR=html
+DISCOUNT_BIN=markdown
 
 for file in `cat docgen_list.txt`; do
 	#docgen_file.sh $file
@@ -66,7 +67,7 @@ for file in `cat docgen_list.txt`; do
 	TITLE=`grep -B1 "^==" gen/$BSNM.txt | head -n 1`
 	sed -e "s/{TITLE}/$TITLE/" docgen_header.txt > $DOC_HTML_DIR/$BSNM.html
 	# Add id to first <ul> (from table of contents), and add class to sub <ul>'s
-	markdown -f +toc -T gen/$BSNM.txt |
+	$DISCOUNT_BIN -f +toc -T gen/$BSNM.txt |
 		sed -e '
 			0,/^<\/ul>/ s/^<ul>/<ul id=toc>/; s/^\(..*\)<ul>/\1<ul class="tocsub">/
 		' >> $DOC_HTML_DIR/$BSNM.html

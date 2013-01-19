@@ -1,2 +1,6 @@
 RNP/bits/BLAS_mix.hpp
+RNP/bits/Permutation.hpp
+RNP/bits/Reflector.hpp
+RNP/bits/Triangular.hpp
 RNP/bits/QR.hpp
+RNP/Random.hpp
