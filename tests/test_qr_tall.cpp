@@ -72,7 +72,7 @@ void test_qr(size_t m, size_t n){
 	}
 	RNP::LA::QR::MultQ("L", "N", m, n, n, Afac, m, tau, B, m, &lwork, work);
 	if(0){
-		std::cout << "B = R*Q:" << std::endl;
+		std::cout << "B = Q*R:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
