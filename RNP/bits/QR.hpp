@@ -16,15 +16,8 @@ namespace QR{
 // RNP::LA::QR
 // ===========
 // Computes the QR factorization and operations involving Q.
-//
-// List of routines
-// ----------------
-// * Factor_unblocked
-// * Factor
-// * MultQ_unblocked
-// * MultQ
-// * GenerateQ_unblocked
-// * GenerateQ
+// For tall matrices, R is upper triangular. For fat matrices, R is
+// upper trapezoidal.
 //
 
 ///////////////////////////////////////////////////////////////////////
@@ -89,7 +82,7 @@ void Factor_unblocked(
 			T alpha = a[i+i*lda];
 			a[i+i*lda] = T(1);
 			Reflector::Apply(
-				"L", false, false, m-i, n-i-1, &a[i+i*lda], 1,
+				"L", 0, false, m-i, n-i-1, &a[i+i*lda], 1,
 				Traits<T>::conj(tau[i]), &a[i+(i+1)*lda], lda, work
 			);
 			a[i+i*lda] = alpha;
@@ -217,7 +210,7 @@ void Factor(
 //       If side = "L", k <= m. If side = "R", k <= n.
 // a     Pointer to the factorization. The i-th column should contain
 //       the vector which defines the i-th elementary reflector for
-//       i = 0..k.
+//       i = 0..k-1.
 // lda   Leading dimension of the array containing A.
 //       If side = "L", lda >= m. If side = "R", lda >= n.
 // tau   Array of tau's, length k.
@@ -264,7 +257,7 @@ void MultQ_unblocked(
 				taui = Traits<T>::conj(tau[i]);
 			}
 			
-			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
+			Reflector::Apply(side, 1, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 		}
 	}else{
 		// loop backwards
@@ -284,7 +277,7 @@ void MultQ_unblocked(
 				taui = Traits<T>::conj(tau[i]);
 			}
 			
-			Reflector::Apply(side, true, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
+			Reflector::Apply(side, 1, false, mi, ni, &a[i+i*lda], 1, taui, &c[ic+jc*ldc], ldc, work);
 		}
 	}
 }
@@ -314,7 +307,7 @@ void MultQ_unblocked(
 //       If side = "L", k <= m. If side = "R", k <= n.
 // a     Pointer to the factorization. The i-th column should contain
 //       the vector which defines the i-th elementary reflector for
-//       i = 0..k.
+//       i = 0..k-1.
 // lda   Leading dimension of the array containing A.
 //       If side = "L", lda >= m. If side = "R", lda >= n.
 // tau   Array of tau's, length k.
@@ -435,7 +428,7 @@ void MultQ(
 // k     Number of elementary reflectors, k <= n.
 // a     Pointer to the factorization. The i-th column should contain
 //       the vector which defines the i-th elementary reflector for
-//       i = 0..k. On exit, the matrix Q.
+//       i = 0..k-1. On exit, the matrix Q.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
 // c     Pointer to the first element of the matrix C.
@@ -461,7 +454,7 @@ void GenerateQ_unblocked(
 		// Apply H[i] to A(i:m,i:n) from the left
 		if(i+1 < n){
 			a[i+i*lda] = T(1);
-			Reflector::Apply("L", false, false, m-i, n-i-1, &a[i+i*lda], 1, tau[i], &a[i+(i+1)*lda], lda, work);
+			Reflector::Apply("L", 0, false, m-i, n-i-1, &a[i+i*lda], 1, tau[i], &a[i+(i+1)*lda], lda, work);
 		}
 		if(i+1 < m){
 			BLAS::Scale(m-i-1, -tau[i], &a[i+1+i*lda], 1);
@@ -489,7 +482,7 @@ void GenerateQ_unblocked(
 // k     Number of elementary reflectors, k <= n.
 // a     Pointer to the factorization. The i-th column should contain
 //       the vector which defines the i-th elementary reflector for
-//       i = 0..k. On exit, the matrix Q.
+//       i = 0..k-1. On exit, the matrix Q.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
 // c     Pointer to the first element of the matrix C.
