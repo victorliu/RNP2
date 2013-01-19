@@ -1,6 +1,12 @@
 #ifndef RNP_RANDOM_HPP_INCLUDED
 #define RNP_RANDOM_HPP_INCLUDED
 
+///////////////////////////////////////////////////////////////////////
+// Random
+// ======
+// Random number generation routines. These are not cryptographically
+// random and are intended for numerical purposes only.
+//
 #include <complex>
 #include <cmath>
 #include <RNP/Types.hpp>
@@ -8,8 +14,36 @@
 namespace RNP{
 namespace Random{
 
+///////////////////////////////////////////////////////////////////////
+// UniformRealVector
+// -----------------
+// Returns a vector of n random real numbers from a uniform
+// distribution in [0,1).
+//
+// This routine uses a multiplicative congruential method with modulus
+// 2^48 and multiplier 33952834046453. For reference, see:
+//
+// > G.S.Fishman, 'Multiplicative congruential random number
+// > generators with modulus 2^b: an exhaustive analysis for
+// > b = 32 and a partial analysis for b = 48',
+// > Math. Comp. 189, pp 331-344, 1990).
+//
+// 48-bit integers are stored in 4 integer array elements with 12 bits
+// per element. Hence the routine is portable across machines with
+// integers of 32 bits or more.
+//
+// This corresponds approximately to the Lapack routines _laruv.
+//
+// Arguments
+// iseed   On entry, the seed of the random number generator; the array
+//         elements must be between 0 and 4095, and iseed[3] must be
+//         odd. On exit, the seed is updated.
+//         If iseed is NULL, then an internal seed is used.
+// n       The number of random numbers to be generated.
+// x       Output vector of the generated random numbers of length n.
+//
 template <typename T> // T must be a real number type
-void UniformRealVector(size_t n, T *x, int iseed[4] = NULL){ // dlaruv
+void UniformRealVector(size_t n, T *x, int iseed[4] = NULL){
 	// This table can be generated in Mathematica by
 	// SplitNum[n_] := Module[{a, b, bb, c, cc, d},
 	//   d = Mod[n, 4096];
@@ -88,35 +122,6 @@ void UniformRealVector(size_t n, T *x, int iseed[4] = NULL){ // dlaruv
 		{1148,1848,3525,2141}, { 545,2366,3801,1537}
 	};
 
-	// Returns a vector of n random real numbers from a uniform
-	// distribution in [0,1).
-	//
-	// Arguments
-	// =========
-	//
-	// iseed   (input/output)
-	//         On entry, the seed of the random number generator; the array
-	//         elements must be between 0 and 4095, and iseed[3] must be
-	//         odd.
-	//         On exit, the seed is updated.
-	//         If iseed is NULL, then an internal seed is used.
-	//
-	// n       The number of random numbers to be generated.
-	//
-	// x       (output) length n. The generated random numbers.
-
-	// Further Details
-	// ===============
-	//
-	// This routine uses a multiplicative congruential method with modulus
-	// 2^48 and multiplier 33952834046453 (see G.S.Fishman,
-	// 'Multiplicative congruential random number generators with modulus
-	// 2^b: an exhaustive analysis for b = 32 and a partial analysis for
-	// b = 48', Math. Comp. 189, pp 331-344, 1990).
-	//
-	// 48-bit integers are stored in 4 integer array elements with 12 bits
-	// per element. Hence the routine is portable across machines with
-	// integers of 32 bits or more.
 	if(0 == n){ return; }
 	static int internal_iseed[4] = {2398, 691, 782, 721};
 	int *_iseed = iseed;
@@ -214,6 +219,23 @@ struct Utility<std::complex<T> >{
 };
 
 namespace Distribution{
+///////////////////////////////////////////////////////////////////////
+// Distribution
+// ------------
+// The enumeration of allowable random number distributions
+// 
+// * Uniform01:  The uniform distribution on [0,1). For complex numbers
+//               the real and imaginary parts are independently drawn.
+// * Uniform_11: The uniform distribution on [-1,1). For complex numbers
+//               the real and imaginary parts are independently drawn.
+// * Normal01:   The standoard normal distribution. For complex numbers
+//               the real and imaginary parts are independently drawn.
+// * UnitDisc:   The uniform distribution within the unit disc. For real
+//               numbers this is the same as Uniform_11.
+// * UnitCircle: The uniform distribution on the unit circle. For real
+//               numbers this is the uniform distribution on the set
+//               {-1,1}.
+//
 enum Distribution{
 	Uniform01,
 	Uniform_11,
@@ -223,8 +245,25 @@ enum Distribution{
 };
 }
 
-template <typename T> // T must be a real number type
-void GenerateVector(Distribution::Distribution dist, size_t n, T *x, int iseed[4] = NULL){ // zlarnv
+///////////////////////////////////////////////////////////////////////
+// GenerateVector
+// --------------
+// Generates a vector of numbers each drawn from a specified
+// distribution. This corresponds approximately to the Lapack
+// routines _larnv.
+//
+// Arguments
+// dist   The distribution to draw from (see documentation on
+//        Distribution).
+// n      The length of the vector.
+// x      The output vector (length n, increment must be 1).
+// iseed  The seed array. See documentation for UniformRealVector.
+//
+template <typename T>
+void GenerateVector(
+	Distribution::Distribution dist, size_t n, T *x,
+	int iseed[4] = NULL
+){
 	typedef typename Traits<T>::real_type real_type;
 	switch(dist){
 	case Distribution::Uniform01:
@@ -280,7 +319,14 @@ void GenerateVector(Distribution::Distribution dist, size_t n, T *x, int iseed[4
 	}
 }
 
-// Scalar generators
+///////////////////////////////////////////////////////////////////////
+// UniformReal
+// -----------
+// Generates a single number from the uniform distribution in the
+// interval [0,1). This routine returns a real number.
+//
+// Arguments
+// iseed  The seed array. See documentation for UniformRealVector.
 template <typename T>
 typename Traits<T>::real_type UniformReal(int iseed[4] = NULL){
 	typename Traits<T>::real_type r;
@@ -288,6 +334,16 @@ typename Traits<T>::real_type UniformReal(int iseed[4] = NULL){
 	return r;
 }
 
+///////////////////////////////////////////////////////////////////////
+// Uniform
+// -------
+// Generates a single number from the uniform distribution in the
+// interval [0,1).
+// For complex numbers, the real and imaginary parts are each drawn
+// from this distribution.
+//
+// Arguments
+// iseed  The seed array. See documentation for UniformRealVector.
 template <typename T>
 T Uniform(int iseed[4] = NULL){
 	T r;
@@ -295,6 +351,15 @@ T Uniform(int iseed[4] = NULL){
 	return r;
 }
 
+///////////////////////////////////////////////////////////////////////
+// StandardNormal
+// --------------
+// Generates a single number from the standard normal distribution.
+// For complex numbers, the real and imaginary parts are each drawn
+// from this distribution.
+//
+// Arguments
+// iseed  The seed array. See documentation for UniformRealVector.
 template <typename T>
 T StandardNormal(int iseed[4] = NULL){
 	typename Traits<T>::real_type r[2];
@@ -302,6 +367,15 @@ T StandardNormal(int iseed[4] = NULL){
 	return Utility<T>::UniformToNormal(r[0], r[1]);
 }
 
+///////////////////////////////////////////////////////////////////////
+// UnitDisc
+// --------
+// Generates a single number uniformly distributed within the unit
+// circle. For real numbers, this is the uniform distribution on the
+// interval [0,1).
+//
+// Arguments
+// iseed  The seed array. See documentation for UniformRealVector.
 template <typename T>
 T UnitDisc(int iseed[4] = NULL){
 	typename Traits<T>::real_type r[2];
@@ -309,6 +383,15 @@ T UnitDisc(int iseed[4] = NULL){
 	return Utility<T>::UniformToUnitDisc(r[0], r[1]);
 }
 
+///////////////////////////////////////////////////////////////////////
+// Unitcircle
+// ----------
+// Generates a single number uniformly distributed on the unit circle.
+// For real numbers, this is the uniform distribution on the set
+// {-1,1}.
+//
+// Arguments
+// iseed  The seed array. See documentation for UniformRealVector.
 template <typename T>
 T Unitcircle(int iseed[4] = NULL){
 	typename Traits<T>::real_type r[2];
