@@ -319,10 +319,10 @@ void Apply(
 			BLAS::ConjugateRank1Update(1, lenc, -tau, &one, incv, work, 1, &c[lenv-1+0*ldc], ldc);
 			// Add remaining contribution
 			if(lenv > 1){
-				if(vconj){
+				if(vconj){ // need to do a double-conjugate rank-1 update
 					for(size_t j = 0; j < lenc; ++j){
 						for(size_t i = 0; i+1 < lenv; ++i){
-							c[i+0*ldc] -= tau * Traits<T>::conj(v[i*incv]) * Traits<T>::conj(work[j]);
+							c[i+j*ldc] -= tau * Traits<T>::conj(v[i*incv]) * Traits<T>::conj(work[j]);
 						}
 					}
 				}else{
