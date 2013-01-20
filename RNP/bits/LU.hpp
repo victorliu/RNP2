@@ -7,7 +7,6 @@
 
 namespace RNP{
 namespace LA{
-
 namespace LU{
 
 // Specialize this class to tune the block size.
@@ -18,6 +17,8 @@ struct Tuning{
 	static inline size_t invert_block_size_min(size_t n){ return 64; }
 	static inline size_t refine_max_iters(){ return 5; }
 };
+
+namespace Util{
 
 // The Norm1Estimator is used in the iterative refinement process
 // for estimating the forward error.
@@ -46,10 +47,10 @@ void Norm1Estimator(const char *trans, size_t n, T *x, void *data_){
 	}
 }
 
-} // namespace LU
+} // namespace Util
 
 template <typename T>
-int PLUFactor_unblocked(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
+int Factor_unblocked(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 	int info = 0;
 	size_t min_dim = (m < n ? m : n);
 	for(size_t j = 0; j < min_dim; ++j){
@@ -74,7 +75,7 @@ int PLUFactor_unblocked(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 }
 
 template <typename T>
-int PLUFactor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
+int Factor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 	//return PLUFactor_unblocked(m, n, a, lda, pivots);
 	
 	static const size_t nb = LU::Tuning<T>::factor_block_size(m, n);
@@ -97,10 +98,10 @@ int PLUFactor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 			pivots[i] += j;
 		}
 		// Apply row swaps to first j columns and rows j to j+jb
-		ApplyPermutations("L", "N", jb, j, a, lda, pivots, j);
+		ApplyPermutations("L", "F", jb, j, a, lda, pivots, j);
 		if(j+jb < n){
 			// Apply row swaps to columns after j+jb
-			ApplyPermutations("L", "N", jb, n-j-jb, &a[0+(j+jb)*lda], lda, pivots, j);
+			ApplyPermutations("L", "F", jb, n-j-jb, &a[0+(j+jb)*lda], lda, pivots, j);
 			// Make block row of U
 			BLAS::SolveTrM("L","L","N","U", jb, n-j-jb, T(1), &a[j+j*lda], lda, &a[j+(j+jb)*lda], lda);
 			if(j+jb < m){
@@ -114,7 +115,7 @@ int PLUFactor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 }
 
 template <typename T>
-void PLUSolve(const char *trans, size_t n, size_t nRHS, const T *a, size_t lda, size_t *ipiv, T *b, size_t ldb){
+void Solve(const char *trans, size_t n, size_t nRHS, const T *a, size_t lda, size_t *ipiv, T *b, size_t ldb){
 	if(0 == n || nRHS == 0){ return; }
 	
 	if('N' == trans[0]){
@@ -143,7 +144,7 @@ void PLUSolve(const char *trans, size_t n, size_t nRHS, const T *a, size_t lda, 
 }
 
 template <typename T>
-int PLUInvert(size_t n, T *a, size_t lda, const size_t *ipiv, size_t *lwork, T *work){
+int Invert(size_t n, T *a, size_t lda, const size_t *ipiv, size_t *lwork, T *work){
 	RNPAssert(NULL != lwork);
 	RNPAssert((0 == *lwork || NULL == work) || *lwork >= n);
 	if(0 == n){ return 0; }
@@ -207,14 +208,13 @@ int PLUInvert(size_t n, T *a, size_t lda, const size_t *ipiv, size_t *lwork, T *
 		}while(1);
 	}
 	// Apply column interchanges
-	LA::ApplyPermutations("R", "I", n, n, a, lda, ipiv);
+	LA::ApplyPermutations("R", "B", n, n, a, lda, ipiv);
 	*lwork = iws;
 	return 0;
 }
 
-
 template <typename T>
-void PLURefineSolution(
+void RefineSolution(
 	const char *trans, size_t n, size_t nRHS, const T *a, size_t lda,
 	const T *af, size_t ldaf, const size_t *ipiv,
 	const T *b, size_t ldb, T *x, size_t ldx,
@@ -337,14 +337,14 @@ void PLURefineSolution(
 			}
 		}
 		
-		LU::Norm1EstimatorData<T> estdata;
+		Util::Norm1EstimatorData<T> estdata;
 		estdata.af = af;
 		estdata.ldaf = ldaf;
 		estdata.ipiv = ipiv;
 		estdata.diagw = rwork;
 		estdata.transn = transn;
 		estdata.transt = transt;
-		real_type ferrj = MatrixNorm1Estimate(n, &LU::Norm1Estimator, &estdata, work);
+		real_type ferrj = MatrixNorm1Estimate(n, &Util::Norm1Estimator, &estdata, work);
 		
 		// Normalize error
 		lstres = real_type(0);
@@ -362,6 +362,7 @@ void PLURefineSolution(
 	}
 }
 
+} // namespace LU
 } // namespace LA
 } // namespace RNP
 
