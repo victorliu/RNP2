@@ -167,7 +167,7 @@ void Copy(
 		memcpy(dst, src, sizeof(T) * m*n);
 	}else{
 		for(size_t j = 0; j < n; ++j){
-			memcpy(&dst[j*lddst], &src[j*lddst], sizeof(T) * m);
+			memcpy(&dst[j*lddst], &src[j*ldsrc], sizeof(T) * m);
 		}
 	}
 }
