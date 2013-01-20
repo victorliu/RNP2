@@ -1,3 +1,4 @@
+#include <complex>
 extern "C" void dlarfb_(
 	const char *side, const char *trans, const char *direc, const char *storev,
 	const int &m, const int &n, const int &k, double *v, const int &ldv,
@@ -6,7 +7,13 @@ extern "C" void dlarfb_(
 extern "C" void dlarft_(
 	const char *direc, const char *storev,
 	const int &m, const int &n, double *a, const int &lda,
-	double *tau, double *work, const int &ldwork);
+	const double *tau, double *work, const int &ldwork);
+extern "C" void dlarf_(const char *side,
+	const int &m, const int &n, const double *v, const int &ldv, const double &tau,
+	double *c, const int &ldc, double* work);
+extern "C" void zlarf_(const char *side,
+	const int &m, const int &n, const std::complex<double> *v, const int &ldv, const std::complex<double> &tau,
+	std::complex<double> *c, const int &ldc, std::complex<double>* work);
 
 #include <RNP/LA.hpp>
 #include <RNP/BLAS.hpp>
@@ -15,14 +22,19 @@ extern "C" void dlarft_(
 #include <iostream>
 #include <cstdlib>
 
-extern "C" void dgeql2_(const int &m, const int &n, double *a, const int &lda, double *tau, double *work, int *info);
-extern "C" void dorm2l_(
+extern "C" void zgerq2_(const int &m, const int &n, std::complex<double> *a, const int &lda, std::complex<double> *tau, std::complex<double> *work, int *info);
+extern "C" void dgerq2_(const int &m, const int &n, double *a, const int &lda, double *tau, double *work, int *info);
+extern "C" void dormr2_(
 	const char *side, const char *trans,
 	const int &m, const int &n, const int &k, double *a, const int &lda, double *tau,
 	double *c, const int &ldc, double *work, int *info);
+extern "C" void zunmr2_(
+	const char *side, const char *trans,
+	const int &m, const int &n, const int &k, std::complex<double> *a, const int &lda, std::complex<double> *tau,
+	std::complex<double> *c, const int &ldc, std::complex<double> *work, int *info);
 
 template <typename T>
-void test_ql(size_t m, size_t n){
+void test_rq(size_t m, size_t n){
 	typedef typename RNP::Traits<T>::real_type real_type;
 	real_type rsnrm(1./((m*n) * RNP::Traits<real_type>::eps()));
 	T *A = new T[m*n];
@@ -45,52 +57,64 @@ void test_ql(size_t m, size_t n){
 	size_t lwork = 0;
 	RNP::BLAS::Copy(m, n, A, m, Afac, m);
 	
-	RNP::LA::QL::Factor(m, n, Afac, m, tau, &lwork, work);
+	RNP::LA::RQ::Factor(m, n, Afac, m, tau, &lwork, work);
+	//lwork = m;
 	std::cout << "lwork = " << lwork << std::endl;
 	work = new T[lwork];
-	RNP::LA::QL::Factor(m, n, Afac, m, tau, &lwork, work);
-
+	RNP::LA::RQ::Factor(m, n, Afac, m, tau, &lwork, work);
+	//RNP::LA::RQ::Factor_unblocked(m, n, Afac, m, tau, work);
+	//int info; zgerq2_(m, n, Afac, m, tau, work, &info);
+	//int info;
 	if(0){
 		std::cout << "Factored A:" << std::endl;
 		RNP::Matrix<T> mA(m, n, Afac, m);
 		std::cout << RNP::IO::Chop(mA) << std::endl << std::endl;
 	}
 	
-	// Apply Q' to the left of original A (use B for workspace)
+	// Apply Q' to the right of original A (use B for workspace)
 	RNP::BLAS::Copy(m, n, A, m, B, m);
 	delete [] work; work = NULL; lwork = 0;
-	RNP::LA::QL::MultQ("L", "C", m, n, n, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::RQ::MultQ("R", "C", m, n, n, &Afac[m-n+0*m], m, tau, B, m, &lwork, work);
+	//lwork = m;
 	work = new T[lwork];
-	RNP::LA::QL::MultQ("L", "C", m, n, n, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::RQ::MultQ("R", "C", m, n, n, &Afac[m-n+0*m], m, tau, B, m, &lwork, work);
+	//RNP::LA::RQ::MultQ_unblocked("R", "C", m, n, n, &Afac[m-n+0*m], m, tau, B, m, work);
+	//dormr2_("R", "T", m, n, n, &Afac[m-n+0*m], m, tau, B, m, work, &info);
+	//zunmr2_("R", "C", m, n, n, &Afac[m-n+0*m], m, tau, B, m, work, &info);
 	
 	if(0){
 		std::cout << "Q' * origA:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	// Check to see if the lower triangle is correct
+	// Check to see if the upper trapezoid is correct
 	if(1){
 		T sum = 0;
 		for(size_t j = 0; j < n; ++j){
-			for(size_t i = m-n+j; i < m; ++i){
+			size_t i;
+			for(i = 0; i <= m-n+j; ++i){
 				sum += RNP::Traits<T>::abs(Afac[i+j*m] - B[i+j*m]);
 			}
+			for(; i < m; ++i){ // check for zero lower triangle
+				sum += RNP::Traits<T>::abs(B[i+j*m]);
+			}
 		}
-		std::cout << "L norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
+		std::cout << "R norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
-	// Apply Q to the left of L
+	// Apply Q to the right of R
 	RNP::BLAS::Set(m, n, T(0), T(0), B, m);
-	RNP::LA::Triangular::Copy("L", "N", n, n, &Afac[m-n+0*m], m, &B[m-n+0*m], m);
+	RNP::BLAS::Copy(m-n, n, Afac, m, B, m);
+	RNP::LA::Triangular::Copy("U", "N", n, n, &Afac[m-n+0*m], m, &B[m-n+0*m], m);
 	if(0){
-		std::cout << "B = L:" << std::endl;
+		std::cout << "B = R:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QL::MultQ("L", "N", m, n, n, Afac, m, tau, B, m, &lwork, work);
+	RNP::LA::RQ::MultQ("R", "N", m, n, n, &Afac[m-n+0*m], m, tau, B, m, &lwork, work);
 	
 	if(0){
-		std::cout << "B = Q*L:" << std::endl;
+		std::cout << "B = R*Q:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
@@ -102,11 +126,11 @@ void test_ql(size_t m, size_t n){
 				sum += RNP::Traits<T>::abs(A[i+j*m] - B[i+j*m]);
 			}
 		}
-		std::cout << "(A - Q*L) norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
+		std::cout << "(A - R*Q) norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
 	// Now treat B as a n-by-m matrix, and copy A' into it,
-	// and apply Q from the right
+	// and apply Q from the left
 	for(size_t j = 0; j < m; ++j){
 		for(size_t i = 0; i < n; ++i){
 			B[i+j*n] = RNP::Traits<T>::conj(A[j+i*m]);
@@ -117,7 +141,7 @@ void test_ql(size_t m, size_t n){
 		RNP::Matrix<T> mB(n, m, B, n);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::LA::QL::MultQ("R", "N", n, m, n, Afac, m, tau, B, n, &lwork, work);
+	RNP::LA::RQ::MultQ("L", "N", n, m, n, &Afac[m-n+0*m], m, tau, B, n, &lwork, work);
 	if(0){
 		std::cout << "B = L':" << std::endl;
 		RNP::Matrix<T> mB(n, m, B, n);
@@ -127,21 +151,21 @@ void test_ql(size_t m, size_t n){
 	if(1){
 		T sum = 0;
 		for(size_t j = 0; j < n; ++j){
-			for(size_t i = m-n+j; i < m; ++i){
+			for(size_t i = 0; i <= m-n+j; ++i){
 				sum += RNP::Traits<T>::abs(Afac[i+j*m] - RNP::Traits<T>::conj(B[j+i*n]));
 			}
 		}
 		std::cout << "L' norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
-	// Now set B = L', and apply Q' from the right to get A'
+	// Now set B = L', and apply Q' from the left to get A'
 	RNP::BLAS::Set(n, m, T(0), T(0), B, n);
 	for(size_t j = 0; j < n; ++j){
-		for(size_t i = m-n+j; i < m; ++i){
+		for(size_t i = 0; i <= m-n+j; ++i){
 			B[j+i*n] = RNP::Traits<T>::conj(Afac[i+j*m]);
 		}
 	}
-	RNP::LA::QL::MultQ("R", "C", n, m, n, Afac, m, tau, B, n, &lwork, work);
+	RNP::LA::RQ::MultQ("L", "C", n, m, n, &Afac[m-n+0*m], m, tau, B, n, &lwork, work);
 	// We should recover A'
 	if(1){
 		T sum = 0;
@@ -155,24 +179,25 @@ void test_ql(size_t m, size_t n){
 	
 	
 	// Make Q
-	T *Q = new T[m*m];
-	RNP::BLAS::Copy(m, n, Afac, m, Q, m);
+	T *Q = new T[n*n];
+	RNP::BLAS::Copy(n, n, &Afac[m-n+0*m], m, Q, n);
 	delete [] work; work = NULL; lwork = 0;
 	
-	RNP::LA::QL::GenerateQ(m, n, n, Q, m, tau, &lwork, work);
+	RNP::LA::RQ::GenerateQ(n, n, n, Q, n, tau, &lwork, work);
 	//lwork = n;
 	work = new T[lwork];
-	RNP::LA::QL::GenerateQ(m, n, n, Q, m, tau, &lwork, work);
+	RNP::LA::RQ::GenerateQ(n, n, n, Q, n, tau, &lwork, work);
+	//RNP::LA::RQ::GenerateQ_unblocked(n, n, n, Q, n, tau, work);
 	
 	if(0){
 		std::cout << "Q:" << std::endl;
-		RNP::Matrix<T> mQ(m, m, Q, m);
+		RNP::Matrix<T> mQ(n, n, Q, n);
 		std::cout << RNP::IO::Chop(mQ) << std::endl << std::endl;
 	}
 	
 	// Form Q'*Q
-	T *QQ = new T[m*m];
-	RNP::BLAS::MultMM("C", "N", n, n, m, 1., Q, m, Q, m, 0., QQ, n);
+	T *QQ = new T[m*n];
+	RNP::BLAS::MultMM("C", "N", n, n, n, 1., Q, n, Q, n, 0., QQ, n);
 	
 	if(0){
 		std::cout << "Q' * Q:" << std::endl;
@@ -192,18 +217,20 @@ void test_ql(size_t m, size_t n){
 		std::cout << "Q' * Q - I norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
-	// Form Q*L
-	//  Put L in QQ for now
-	RNP::BLAS::Set(n, n, T(0), T(0), QQ, n);
-	RNP::LA::Triangular::Copy("L", "N", n, n, &Afac[m-n+0*m], m, QQ, n);
+	// Form R*Q in B
+	//  Form R in QQ
+	RNP::BLAS::Set(m, n, T(0), T(0), QQ, m);
+	RNP::BLAS::Copy(m-n, n, Afac, m, QQ, m);
+	RNP::LA::Triangular::Copy("U", "N", n, n, &Afac[m-n+0*m], m, &QQ[m-n+0*m], m);
 	if(0){
-		std::cout << "QQ = L:" << std::endl;
-		RNP::Matrix<T> mB(n, n, QQ, n);
+		std::cout << "QQ = R:" << std::endl;
+		RNP::Matrix<T> mB(m, n, QQ, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
-	RNP::BLAS::MultMM("N", "N", m, n, n, T(1), Q, m, QQ, n, T(0), B, m);
+	RNP::BLAS::MultMM("N", "N", m, n, n, T(1), QQ, m, Q, n, T(0), B, m);
+	
 	if(0){
-		std::cout << "B = Q*L:" << std::endl;
+		std::cout << "B = R*Q:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
 		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
 	}
@@ -215,23 +242,7 @@ void test_ql(size_t m, size_t n){
 				sum += RNP::Traits<T>::abs(A[i+j*m] - B[i+j*m]);
 			}
 		}
-		std::cout << "(A - Q*L) norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
-	}
-	
-	// Generate the columns of Q corresponding to the nullspace of A'
-	RNP::BLAS::Set(m, m, T(0), T(1), Q, m);
-	RNP::LA::QL::MultQ("L", "N", m, m, n, Afac, m, tau, Q, m, &lwork, work);
-	
-	RNP::BLAS::MultMM("C", "N", n, m-n, m, T(1), A, m, &Q[0+0*m], m, T(0), QQ, n);
-	// Check to see if we get 0
-	if(1){
-		T sum = 0;
-		for(size_t j = 0; j < m-n; ++j){
-			for(size_t i = 0; i < n; ++i){
-				sum += RNP::Traits<T>::abs(QQ[i+j*n]);
-			}
-		}
-		std::cout << "A*Qn norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
+		std::cout << "(A - R*Q) norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
 	delete [] QQ;
@@ -247,7 +258,7 @@ int main(){
 	srand(0);
 	size_t m = 170; // must be larger than n
 	size_t n = 150;
-	test_ql<double>(m, n);
-	test_ql<std::complex<double> >(m, n);
+	test_rq<double>(m, n);
+	test_rq<std::complex<double> >(m, n);
 	return 0;
 }

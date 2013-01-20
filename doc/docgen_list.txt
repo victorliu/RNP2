@@ -3,4 +3,7 @@ RNP/bits/Permutation.hpp
 RNP/bits/Reflector.hpp
 RNP/bits/Triangular.hpp
 RNP/bits/QR.hpp
+RNP/bits/LQ.hpp
+RNP/bits/QL.hpp
+RNP/bits/RQ.hpp
 RNP/Random.hpp

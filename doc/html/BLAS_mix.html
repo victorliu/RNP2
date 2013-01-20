@@ -1,0 +1,3509 @@
+<html>
+<head>
+<title>RNP::BLAS (mixed implementation)</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#RNP::BLAS..mixed.implementation.">RNP::BLAS (mixed implementation)</a>
+ <ul class="tocsub">
+  <li><a href="#Name.mappings.from.fortran.BLAS">Name mappings from fortran BLAS</a>
+  <ul class="tocsub">
+   <li><a href="#Level.1">Level 1</a></li>
+   <li><a href="#Level.2">Level 2</a></li>
+   <li><a href="#Level.3">Level 3</a></li>
+   <li><a href="#Extra.routines">Extra routines</a></li>
+  </ul>
+  </li>
+  <li><a href="#Set..vector.">Set (vector)</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Set..matrix.">Set (matrix)</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Copy..matrix.">Copy (matrix)</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Copy..matrix..transposed.">Copy (matrix, transposed)</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Conjugate">Conjugate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Rescale">Rescale</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Norm1">Norm1</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#RotGen">RotGen</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ModifiedRotGen..float.">ModifiedRotGen (float)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ModifiedRotGen..double.">ModifiedRotGen (double)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#RotApply">RotApply</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ModifiedRotApply..float.">ModifiedRotApply (float)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ModifiedRotApply..double.">ModifiedRotApply (double)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Swap">Swap</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Scale">Scale</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Copy..vector.">Copy (vector)</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Axpy">Axpy</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Dot">Dot</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#DotEx..float.to.double.">DotEx (float to double)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#DotEx..float.to.float.">DotEx (float to float)</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ConjugateDot">ConjugateDot</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Norm2">Norm2</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Asum">Asum</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MaximumIndex">MaximumIndex</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultMV">MultMV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultBandedV">MultBandedV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultHermV">MultHermV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultBandedHermV">MultBandedHermV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultPackedHermV">MultPackedHermV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultSymV">MultSymV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultBandedSymV">MultBandedSymV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultPackedSymV">MultPackedSymV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultTrV">MultTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultBandedTrV">MultBandedTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultPackedTrV">MultPackedTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SolveTrV">SolveTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SolveBandedTrV">SolveBandedTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SolvePackedTrV">SolvePackedTrV</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Rank1Update">Rank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ConjugateRank1Update">ConjugateRank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#HermRank1Update">HermRank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#PackedHermRank1Update">PackedHermRank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#HermRank2Update">HermRank2Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#PackedHermRank2Update">PackedHermRank2Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SymRank1Update">SymRank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#PackedSymRank1Update">PackedSymRank1Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SymRank2Update">SymRank2Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#PackedSymRank2Update">PackedSymRank2Update</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultMM">MultMM</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultSymM">MultSymM</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultHermM">MultHermM</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SymRankKUpdate">SymRankKUpdate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#HermRankKUpdate">HermRankKUpdate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SymRank2KUpdate">SymRank2KUpdate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#HermRank2KUpdate">HermRank2KUpdate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultTrM">MultTrM</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SolveTrM">SolveTrM</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::BLAS..mixed.implementation."></a>
+<h1>RNP::BLAS (mixed implementation)</h1>
+
+<p>This header provides templated implementations of low level BLAS
+and declares prototypes to call external BLAS for high level
+routines.</p>
+
+<p>For efficiency, we assume that arguments are not aliased. That is,
+they do not point to overlapping regions of memory. These arguments
+are indicated by the RNP_RESTRICT marker.</p>
+
+<hr />
+
+<a name="Name.mappings.from.fortran.BLAS"></a>
+<h2>Name mappings from fortran BLAS</h2>
+
+<a name="Level.1"></a>
+<h3>Level 1</h3>
+
+<table>
+<thead>
+<tr>
+<th>single </th>
+<th> double </th>
+<th> complex </th>
+<th> zomplex </th>
+<th> RNP name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>srotg  </td>
+<td> drotg  </td>
+<td> crotg   </td>
+<td> zrotg   </td>
+<td> RotGen</td>
+</tr>
+<tr>
+<td>srotmg </td>
+<td> drotmg </td>
+<td>         </td>
+<td>         </td>
+<td> ModifiedRotGen</td>
+</tr>
+<tr>
+<td>srot   </td>
+<td> drot   </td>
+<td>         </td>
+<td>         </td>
+<td> RotApply</td>
+</tr>
+<tr>
+<td>srotm  </td>
+<td> drotm  </td>
+<td>         </td>
+<td>         </td>
+<td> ModifiedRotApply</td>
+</tr>
+<tr>
+<td>sswap  </td>
+<td> dswap  </td>
+<td> cswap   </td>
+<td> zswap   </td>
+<td> Swap</td>
+</tr>
+<tr>
+<td>sscal  </td>
+<td> dscal  </td>
+<td> cscal   </td>
+<td> zscal   </td>
+<td> Scale</td>
+</tr>
+<tr>
+<td>scopy  </td>
+<td> dcopy  </td>
+<td> ccopy   </td>
+<td> zcopy   </td>
+<td> Copy</td>
+</tr>
+<tr>
+<td>saxpy  </td>
+<td> daxpy  </td>
+<td> caxpy   </td>
+<td> zaxpy   </td>
+<td> Axpy</td>
+</tr>
+<tr>
+<td>sdot   </td>
+<td> ddot   </td>
+<td> cdotu   </td>
+<td> zdotu   </td>
+<td> Dot</td>
+</tr>
+<tr>
+<td>dsdot  </td>
+<td> sdsdot </td>
+<td>         </td>
+<td>         </td>
+<td> DotEx</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cdotc   </td>
+<td> zdotc   </td>
+<td> ConjugateDot</td>
+</tr>
+<tr>
+<td>snrm2  </td>
+<td> dnrm2  </td>
+<td> scnrm2  </td>
+<td> dznrm2  </td>
+<td> Norm2</td>
+</tr>
+<tr>
+<td>sasum  </td>
+<td> dasum  </td>
+<td> scasum  </td>
+<td> dzasum  </td>
+<td> Asum</td>
+</tr>
+<tr>
+<td>isamax </td>
+<td> idamax </td>
+<td> icamax  </td>
+<td> izamax  </td>
+<td> MaximumIndex</td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="Level.2"></a>
+<h3>Level 2</h3>
+
+<table>
+<thead>
+<tr>
+<th>single </th>
+<th> double </th>
+<th> complex </th>
+<th> zomplex </th>
+<th> RNP name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sgemv  </td>
+<td> dgemv  </td>
+<td> cgemv   </td>
+<td> zgemv   </td>
+<td> MultMV</td>
+</tr>
+<tr>
+<td>sgbmv  </td>
+<td> dgbmv  </td>
+<td> cgbmv   </td>
+<td> zgbmv   </td>
+<td> MultBandedV</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chemv   </td>
+<td> zhemv   </td>
+<td> MultHermV</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chbmv   </td>
+<td> zhbmv   </td>
+<td> MultBandedHermV</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chpmv   </td>
+<td> zhpmv   </td>
+<td> MultPackedHermV</td>
+</tr>
+<tr>
+<td>ssymv  </td>
+<td> dsymv  </td>
+<td>         </td>
+<td>         </td>
+<td> MultSymV</td>
+</tr>
+<tr>
+<td>ssbmv  </td>
+<td> dsbmv  </td>
+<td>         </td>
+<td>         </td>
+<td> MultBandedSymV</td>
+</tr>
+<tr>
+<td>sspmv  </td>
+<td> dspmv  </td>
+<td>         </td>
+<td>         </td>
+<td> MultPackedSymV</td>
+</tr>
+<tr>
+<td>strmv  </td>
+<td> dtrmv  </td>
+<td> ctrmv   </td>
+<td> ztrmv   </td>
+<td> MultTrV</td>
+</tr>
+<tr>
+<td>stbmv  </td>
+<td> dtbmv  </td>
+<td> ctbmv   </td>
+<td> ztbmv   </td>
+<td> MultBandedTrV</td>
+</tr>
+<tr>
+<td>stpmv  </td>
+<td> dtpmv  </td>
+<td> ctpmv   </td>
+<td> ztpmv   </td>
+<td> MultPackedTrV</td>
+</tr>
+<tr>
+<td>strsv  </td>
+<td> dtrsv  </td>
+<td> ctrsv   </td>
+<td> ztrsv   </td>
+<td> SolveTrV</td>
+</tr>
+<tr>
+<td>stbsv  </td>
+<td> dtbsv  </td>
+<td> ctbsv   </td>
+<td> ztbsv   </td>
+<td> SolveBandedTrV</td>
+</tr>
+<tr>
+<td>stpsv  </td>
+<td> dtpsv  </td>
+<td> ctpsv   </td>
+<td> ztpsv   </td>
+<td> SolvePackedTrV</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td>         </td>
+<td>         </td>
+<td></td>
+</tr>
+<tr>
+<td>sger   </td>
+<td> dger   </td>
+<td> cgeru   </td>
+<td> zgeru   </td>
+<td> Rank1Update</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cgerc   </td>
+<td> zgerc   </td>
+<td> ConjugateRank1Update</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cher    </td>
+<td> zher    </td>
+<td> HermRank1Update</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chpr    </td>
+<td> zhpr    </td>
+<td> PackedHermRank1Update</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cher2   </td>
+<td> zher2   </td>
+<td> HermRank2Update</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chpr2   </td>
+<td> zhpr2   </td>
+<td> PackedHermRank2Update</td>
+</tr>
+<tr>
+<td>ssyr   </td>
+<td> dsyr   </td>
+<td>         </td>
+<td>         </td>
+<td> SymRank1Update</td>
+</tr>
+<tr>
+<td>sspr   </td>
+<td> dspr   </td>
+<td>         </td>
+<td>         </td>
+<td> PackedSymRank1Update</td>
+</tr>
+<tr>
+<td>ssyr2  </td>
+<td> dsyr2  </td>
+<td>         </td>
+<td>         </td>
+<td> SymRank2Update</td>
+</tr>
+<tr>
+<td>sspr2  </td>
+<td> dspr2  </td>
+<td>         </td>
+<td>         </td>
+<td> PackedSymRank2Update</td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="Level.3"></a>
+<h3>Level 3</h3>
+
+<table>
+<thead>
+<tr>
+<th>single </th>
+<th> double </th>
+<th> complex </th>
+<th> zomplex </th>
+<th> RNP name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sgemm  </td>
+<td> dgemm  </td>
+<td> cgemm   </td>
+<td> zgemm   </td>
+<td> MultMM</td>
+</tr>
+<tr>
+<td>ssymm  </td>
+<td> dsymm  </td>
+<td> csymm   </td>
+<td> zsymm   </td>
+<td> MultSyM</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> chemm   </td>
+<td> zhemm   </td>
+<td> MultHermM</td>
+</tr>
+<tr>
+<td>ssyrk  </td>
+<td> dsyrk  </td>
+<td> csyrk   </td>
+<td> zsyrk   </td>
+<td> SymRankKUpdate</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cherk   </td>
+<td> zherk   </td>
+<td> HermRankKUpdate</td>
+</tr>
+<tr>
+<td>ssyr2k </td>
+<td> dsyr2k </td>
+<td> csyr2k  </td>
+<td> zsyr2k  </td>
+<td> SymRank2KUpdate</td>
+</tr>
+<tr>
+<td></td>
+<td>        </td>
+<td> cher2k  </td>
+<td> zher2k  </td>
+<td> HermRank2KUpdate</td>
+</tr>
+<tr>
+<td>strmm  </td>
+<td> dtrmm  </td>
+<td> ctrmm   </td>
+<td> ztrmm   </td>
+<td> MultTrM</td>
+</tr>
+<tr>
+<td>strsm  </td>
+<td> dtrsm  </td>
+<td> ctrsm   </td>
+<td> ztrsm   </td>
+<td> SolveTrM</td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="Extra.routines"></a>
+<h3>Extra routines</h3>
+
+<table>
+<thead>
+<tr>
+<th>Level 1,2 </th>
+<th> Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Set       </td>
+<td> Sets entries in a vector or (parts of a) matrix (_laset)</td>
+</tr>
+<tr>
+<td>Copy      </td>
+<td> Copies a matrix, possilby transposed</td>
+</tr>
+<tr>
+<td>Conjugate </td>
+<td> Conjugates a vector (_lacgv)</td>
+</tr>
+<tr>
+<td>Rescale   </td>
+<td> Rescales a matrix (_lascl)</td>
+</tr>
+<tr>
+<td>Norm1     </td>
+<td> True 1-norm of a vector</td>
+</tr>
+</tbody>
+</table>
+
+
+<hr />
+
+<a name="Set..vector."></a>
+<h2>Set (vector)</h2>
+
+<p>Sets each element of a vector to the same value.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Length of vector.</dd>
+<dt>val</dt>
+<dd> Value to set.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Set(size_t n, const T &amp;val, T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="Set..matrix."></a>
+<h2>Set (matrix)</h2>
+
+<p>Sets elements of a rectangular matrix to the specified off-diagonal
+and diagonal values.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix.</dd>
+<dt>offdiag</dt>
+<dd> Value to which offdiagonal elements are set.</dd>
+<dt>diag</dt>
+<dd> Value to which diagonal elements are set.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing the matrix,
+    lda >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T, typename TV&gt;
+void Set(
+    size_t m, size_t n, const TV &amp;offdiag, const TV &amp;diag,
+    T* RNP_RESTRICT a, size_t lda
+)
+</code></pre>
+
+<hr />
+
+<a name="Copy..matrix."></a>
+<h2>Copy (matrix)</h2>
+
+<p>Copies values from one rectangular matrix to another of identical
+size.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrices.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrices.</dd>
+<dt>src</dt>
+<dd> Pointer to the first element of the source matrix.</dd>
+<dt>ldsrc</dt>
+<dd> Leading dimension of the array containing the source
+    matrix, ldsrc >= m.</dd>
+<dt>dst</dt>
+<dd> Pointer to the first element of the destination matrix.</dd>
+<dt>lddst</dt>
+<dd> Leading dimension of the array containing the destination
+    matrix, ldsrc >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Copy(
+    size_t m, size_t n, const T* RNP_RESTRICT src, size_t ldsrc,
+    T* RNP_RESTRICT dst, size_t lddst
+)
+</code></pre>
+
+<hr />
+
+<a name="Copy..matrix..transposed."></a>
+<h2>Copy (matrix, transposed)</h2>
+
+<p>Copies values from one rectangular matrix to another of identical
+size, possibly transposed. This version supports copying matrices
+with different types of elements (so long as they are compatible
+with the assignment operator).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, source is not transposed.
+    If &ldquo;T&rdquo;, source is transposed.
+    If &ldquo;C&rdquo;, source is conjugate-transposed.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrices.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrices.</dd>
+<dt>src</dt>
+<dd> Pointer to the first element of the source matrix.</dd>
+<dt>ldsrc</dt>
+<dd> Leading dimension of the array containing the source
+    matrix, ldsrc >= m.</dd>
+<dt>dst</dt>
+<dd> Pointer to the first element of the destination matrix.</dd>
+<dt>lddst</dt>
+<dd> Leading dimension of the array containing the destination
+    matrix, ldsrc >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename TS, typename TD&gt;
+void Copy(
+    const char *trans, size_t m, size_t n,
+    const TS* RNP_RESTRICT src, size_t ldsrc,
+    TD* RNP_RESTRICT dst, size_t lddst
+)
+</code></pre>
+
+<hr />
+
+<a name="Conjugate"></a>
+<h2>Conjugate</h2>
+
+<p>Conjugates each element of a vector.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Conjugate(size_t n, T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="Rescale"></a>
+<h2>Rescale</h2>
+
+<p>Rescales every element of a matrix safely. The scale factor is
+specified as a ratio cto/cfrom. One typically specifies cfrom
+as the element norm of the existing matrix, and cto as the target
+element norm scaling.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>type</dt>
+<dd> Type of matrix to scale.
+  If &ldquo;G&rdquo;, the matrix is a general rectangular matrix.
+  If &ldquo;L&rdquo;, the matrix is assumed to be lower triangular.
+  If &ldquo;U&rdquo;, the matrix is assumed to be upper triangular.
+  If &ldquo;H&rdquo;, the matrix is assumed to be upper Hessenberg.
+  If &ldquo;B&rdquo;, the matrix is assumed to be the lower half of a
+          symmetric banded matrix (kl is the lower bandwidth).
+  If &ldquo;Q&rdquo;, the matrix is assumed to be the upper half of a
+          symmetric banded matrix (ku is the lower bandwidth).
+  If &ldquo;Z&rdquo;, the matrix is assumed to be banded with lower and
+          upper bandwidths kl and ku, respectively.</dd>
+<dt>cfrom</dt>
+<dd> The denominator of the scale factor to apply.</dd>
+<dt>cto</dt>
+<dd> The numerator of the scale factor to apply.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrix.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing the matrix, lda > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename TS, typename T&gt;
+void Rescale(
+    const char *type, size_t kl, size_t ku,
+    const TS &amp;cfrom, const TS &amp;cto,
+    size_t m, size_t n, T* RNP_RESTRICT a, size_t lda
+)
+</code></pre>
+
+<hr />
+
+<a name="Norm1"></a>
+<h2>Norm1</h2>
+
+<p>Returns the 1-norm of a vector (sum of absolute values of each
+element).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+typename Traits&lt;T&gt;::real_type Norm1(
+    size_t n, const T* RNP_RESTRICT x, size_t incx
+)
+</code></pre>
+
+<hr />
+
+<a name="RotGen"></a>
+<h2>RotGen</h2>
+
+<p>Computes the elements of a plane (Givens) rotation matrix such that</p>
+
+<pre><code>[      c     s ] * [ a ] = [ r ]
+[ -congj(s)  c ]   [ b ] = [ 0 ]
+</code></pre>
+
+<p>where r = (a / sqrt(conjg(a)<em>a)) * sqrt ( conjg(a)</em>a + conjg(b)*b ).
+The plane rotation can be used to introduce zero elements into a
+matrix selectively.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>a</dt>
+<dd> First element of the vector. On exit, it is overwritten with
+  the value r of the rotated vector.</dd>
+<dt>b</dt>
+<dd> Second element of the vector that is to be zeroed.</dd>
+<dt>c</dt>
+<dd> The (real) value c in the rotation matrix. This corresponds
+  to the cosine of the angle of rotation.</dd>
+<dt>s</dt>
+<dd> The value s in the rotation matrix. This corresponds to the
+  sine of the angle of rotation.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void RotGen(
+    T *a, const T &amp;b,
+    typename Traits&lt;T&gt;::real_type* c, T* s
+)
+</code></pre>
+
+<hr />
+
+<a name="ModifiedRotGen..float."></a>
+<h2>ModifiedRotGen (float)</h2>
+
+<p>Calls out to BLAS routine srotmg.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void ModifiedRotGen(
+    float *d1, float *d2, float *x1, const float &amp;x2,
+    float param[5]
+);
+</code></pre>
+
+<hr />
+
+<a name="ModifiedRotGen..double."></a>
+<h2>ModifiedRotGen (double)</h2>
+
+<p>Calls out to BLAS routine drotmg.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void ModifiedRotGen(
+    double *d1, double *d2, double *x1, const double &amp;x2,
+    double param[5]
+);
+</code></pre>
+
+<hr />
+
+<a name="RotApply"></a>
+<h2>RotApply</h2>
+
+<p>Applies a plane rotation to a pair of vectors. It treats each
+corresponding pair of elements of the two vectors as a 2-vector
+upon which to apply the rotation. These will typically be rows
+of a matrix when applying a rotation from the left, or columns of
+a matrix when applying a rotation from the right.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the first vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the first vector.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the second vector. This
+ typically corresponds to the row or column of the element
+ being zeroed.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the second vector.</dd>
+<dt>c</dt>
+<dd> The (real) cosine of the angle of the rotation.</dd>
+<dt>s</dt>
+<dd> The sine of the angle of the rotation.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void RotApply(
+    size_t n, T* RNP_RESTRICT x, size_t incx,
+    T* RNP_RESTRICT y, size_t incy,
+    const typename Traits&lt;T&gt;::real_type &amp;c, const T &amp;s
+)
+</code></pre>
+
+<hr />
+
+<a name="ModifiedRotApply..float."></a>
+<h2>ModifiedRotApply (float)</h2>
+
+<p>Calls out to BLAS routine srotm.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void ModifiedRotApply(
+    size_t n, float  *x, size_t incx, float  *y, size_t incy,
+    const float  param[5]
+);
+</code></pre>
+
+<hr />
+
+<a name="ModifiedRotApply..double."></a>
+<h2>ModifiedRotApply (double)</h2>
+
+<p>Calls out to BLAS routine drotm.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void ModifiedRotApply(
+    size_t n, double *x, size_t incx, double *y, size_t incy,
+    const double param[5]
+);
+</code></pre>
+
+<hr />
+
+<a name="Swap"></a>
+<h2>Swap</h2>
+
+<p>Swaps the elements between two vectors of equal length.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the first vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the first vector.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the second vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the second vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Swap(
+    size_t n, T* RNP_RESTRICT x, size_t incx,
+    T* RNP_RESTRICT y, size_t incy
+)
+</code></pre>
+
+<hr />
+
+<a name="Scale"></a>
+<h2>Scale</h2>
+
+<p>Multiplies each element of a vector by a constant alpha.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>alpha</dt>
+<dd> The scale factor to apply to the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename TS, typename T&gt;
+void Scale(size_t n, const TS &amp;alpha, T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="Copy..vector."></a>
+<h2>Copy (vector)</h2>
+
+<p>Copies a source vector into a destination vector.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>src</dt>
+<dd> Pointer to the first element of the source vector.</dd>
+<dt>incsrc</dt>
+<dd> Increment between elements of the source vector.</dd>
+<dt>dst</dt>
+<dd> Pointer to the first element of the destination vector.</dd>
+<dt>incdst</dt>
+<dd> Increment between elements of the destination vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename TS, typename TD&gt;
+void Copy(
+    size_t n, const TS* RNP_RESTRICT src, size_t incsrc,
+    TD* RNP_RESTRICT dst, size_t incdst
+)
+</code></pre>
+
+<hr />
+
+<a name="Axpy"></a>
+<h2>Axpy</h2>
+
+<p>Adds a multiple alpha of one vector x to another vector y, so that</p>
+
+<pre><code>y &lt;- alpha*x + y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to x.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of y.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename TS, typename T&gt;
+void Axpy(
+    size_t n, const TS &amp;alpha, const T* RNP_RESTRICT x, size_t incx,
+    T* RNP_RESTRICT y, size_t incy
+)
+</code></pre>
+
+<hr />
+
+<a name="Dot"></a>
+<h2>Dot</h2>
+
+<p>Returns the dot product of two vectors (sum of products of
+corresponding elements).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+T Dot(
+    size_t n, const T* RNP_RESTRICT x, size_t incx,
+    const T* RNP_RESTRICT y, size_t incy
+)
+</code></pre>
+
+<hr />
+
+<a name="DotEx..float.to.double."></a>
+<h2>DotEx (float to double)</h2>
+
+<p>Calls out to the BLAS routine dsdot. Computes the dot product to
+double precision and returns it.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>double DotEx(
+    size_t n, const float* RNP_RESTRICT x, size_t incx,
+    const float* RNP_RESTRICT y, size_t incy
+);
+</code></pre>
+
+<hr />
+
+<a name="DotEx..float.to.float."></a>
+<h2>DotEx (float to float)</h2>
+
+<p>Calls out to the BLAS routine sdsdot. Computes the dot product to
+double precision internally, returns it sum with b in float
+precision.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>float DotEx(
+    size_t n, const float &amp;b, const float* RNP_RESTRICT x, size_t incx,
+    const float* RNP_RESTRICT y, size_t incy
+);
+</code></pre>
+
+<hr />
+
+<a name="ConjugateDot"></a>
+<h2>ConjugateDot</h2>
+
+<p>Returns the conjugate dot product of two vectors (a dot product
+where the first vector x is conjugated).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vectors.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector (conjugated).</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+T ConjugateDot(
+    size_t n, const T* RNP_RESTRICT x, size_t incx,
+    const T* RNP_RESTRICT y, size_t incy
+)
+</code></pre>
+
+<hr />
+
+<a name="Norm2"></a>
+<h2>Norm2</h2>
+
+<p>Returns the 2-norm of a vector (square root of sum of squares of
+absolute values of each element).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+typename Traits&lt;T&gt;::real_type Norm2(size_t n, const T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="Asum"></a>
+<h2>Asum</h2>
+
+<p>Returns the sum of the 1-norms of each element of a vector. This is
+equivalent to Norm1 for real vectors, but for complex vectors, the
+1-norm of each element is the sum of absolute values of the real
+and imaginary parts.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+typename Traits&lt;T&gt;::real_type Asum(size_t n, const T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="MaximumIndex"></a>
+<h2>MaximumIndex</h2>
+
+<p>Returns 0-based index of the element with maximum 1-norm. For
+complex vectors, the 1-norm is the sum of absolute values of the
+real and imaginary parts. This is not equivalent to the BLAS
+routines i_amax, which return a 1-based index.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+size_t MaximumIndex(size_t n, const T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="MultMV"></a>
+<h2>MultMV</h2>
+
+<p>Computes the product of a general rectangular matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * op(A) * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>m</dt>
+<dd> Number of rows of A.</dd>
+<dt>n</dt>
+<dd> Number of columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to op(A).</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= m.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultMV(const char *trans, size_t m, size_t n,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultMV(const char *trans, size_t m, size_t n,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+void MultMV(const char *trans, size_t m, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultMV(const char *trans, size_t m, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+</code></pre>
+
+<hr />
+
+<a name="MultBandedV"></a>
+<h2>MultBandedV</h2>
+
+<p>Computes the product of a banded rectangular matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * op(A) * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>m</dt>
+<dd> Number of rows of A.</dd>
+<dt>n</dt>
+<dd> Number of columns of A.</dd>
+<dt>kl</dt>
+<dd> The lower bandwidth of A (not counting the diagonal), kl >= 0.</dd>
+<dt>ku</dt>
+<dd> The upper bandwidth of A (not counting the diagonal), ku >= 0.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to op(A).</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= m.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultBandedV(
+    const char *trans, size_t m, size_t n, size_t kl, size_t ku,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultBandedV(
+    const char *trans, size_t m, size_t n, size_t kl, size_t ku,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+void MultBandedV(
+    const char *trans, size_t m, size_t n, size_t kl, size_t ku,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultBandedV(
+    const char *trans, size_t m, size_t n, size_t kl, size_t ku,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+</code></pre>
+
+<hr />
+
+<a name="MultHermV"></a>
+<h2>MultHermV</h2>
+
+<p>Computes the product of a Hermitian square matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultHermV(const char *uplo, size_t n,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultHermV(const char *uplo, size_t n,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+void MultHermV(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultHermV(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+</code></pre>
+
+<hr />
+
+<a name="MultBandedHermV"></a>
+<h2>MultBandedHermV</h2>
+
+<p>Computes the product of a Hermitian banded matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>k</dt>
+<dd> Number of sub- or super-diagonals of A, k >= 0.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultBandedHermV(const char *uplo, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultBandedHermV(const char *uplo, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+void MultBandedHermV(const char *uplo, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultBandedHermV(const char *uplo, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+</code></pre>
+
+<hr />
+
+<a name="MultPackedHermV"></a>
+<h2>MultPackedHermV</h2>
+
+<p>Computes the product of a Hermitian square matrix with a vector.
+The Hermitian matrix is assumed to be in packed form.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultPackedHermV(const char *uplo, size_t n,
+    const float &amp;alpha, const float *ap,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultPackedHermV(const char *uplo, size_t n,
+    const double &amp;alpha, const double *ap,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+void MultPackedHermV(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *ap,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultPackedHermV(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *ap,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+</code></pre>
+
+<hr />
+
+<a name="MultSymV"></a>
+<h2>MultSymV</h2>
+
+<p>Computes the product of a symmetric square matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultSymV(const char *uplo, size_t n,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultSymV(const char *uplo, size_t n,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+/* These don't exist in BLAS
+void MultSymV(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultSymV(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+*/
+</code></pre>
+
+<hr />
+
+<a name="MultBandedSymV"></a>
+<h2>MultBandedSymV</h2>
+
+<p>Computes the product of a symmetric banded matrix with a vector.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>k</dt>
+<dd> Number of sub- or super-diagonals of A, k >= 0.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultBandedSymV(const char *uplo, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultBandedSymV(const char *uplo, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+/* These don't exist in BLAS
+void MultBandedSymV(const char *uplo, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultBandedSymV(const char *uplo, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+*/
+</code></pre>
+
+<hr />
+
+<a name="MultPackedSymV"></a>
+<h2>MultPackedSymV</h2>
+
+<p>Computes the product of a symmetric square matrix with a vector.
+The symmetric matrix is assumed to be in packed form.</p>
+
+<pre><code>y &lt;- alpha * A * x + beta * y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to A.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to y. Note that if A has a zero
+  dimension, then the scale factor is not applied to y.
+  You must detect this special case and handle it separately.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultPackedSymV(const char *uplo, size_t n,
+    const float &amp;alpha, const float *ap,
+    const float *x, size_t incx,
+    const float &amp;beta, float *y, size_t incy);
+void MultPackedSymV(const char *uplo, size_t n,
+    const double &amp;alpha, const double *ap,
+    const double *x, size_t incx,
+    const double &amp;beta, double *y, size_t incy);
+/* These don't exist in BLAS
+void MultPackedSymV(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *ap,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; &amp;beta,
+    std::complex&lt;float&gt; *y, size_t incy);
+void MultPackedSymV(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *ap,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; &amp;beta,
+    std::complex&lt;double&gt; *y, size_t incy);
+*/
+</code></pre>
+
+<hr />
+
+<a name="MultTrV"></a>
+<h2>MultTrV</h2>
+
+<p>Computes the product of a triangular matrix with a vector.</p>
+
+<pre><code>x &lt;- op(A) * x
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On exit, it is
+  overwritten by op(A) * x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const float *a, size_t lda, float *x, size_t incx);
+void MultTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const double *a, size_t lda, double *x, size_t incx);
+void MultTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *x, size_t incx);
+void MultTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="MultBandedTrV"></a>
+<h2>MultBandedTrV</h2>
+
+<p>Computes the product of a banded triangular matrix with a vector.</p>
+
+<pre><code>x &lt;- op(A) * x
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>k</dt>
+<dd> Bandwidth of A (not counting the diagonal), k >= 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On exit, it is
+  overwritten by op(A) * x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const float *a, size_t lda,
+    float *x, size_t incx);
+void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const double *a, size_t lda,
+    double *x, size_t incx);
+void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *x, size_t incx);
+void MultBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="MultPackedTrV"></a>
+<h2>MultPackedTrV</h2>
+
+<p>Computes the product of a packed triangular matrix with a vector.</p>
+
+<pre><code>x &lt;- op(A) * x
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On exit, it is
+  overwritten by op(A) * x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const float *ap, float *x, size_t incx);
+void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const double *ap, double *x, size_t incx);
+void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;float&gt; *ap,
+    std::complex&lt;float&gt; *x, size_t incx);
+void MultPackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;double&gt; *ap,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="SolveTrV"></a>
+<h2>SolveTrV</h2>
+
+<p>Computes the product of the inverse of a triangular matrix with
+a vector. Solves for y in</p>
+
+<pre><code>op(A) * y = x
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On exit, it is
+  overwritten by the solution y.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SolveTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const float *a, size_t lda, float *x, size_t incx);
+void SolveTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const double *a, size_t lda, double *x, size_t incx);
+void SolveTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *x, size_t incx);
+void SolveTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="SolveBandedTrV"></a>
+<h2>SolveBandedTrV</h2>
+
+<p>Computes the product of the inverse of a banded triangular matrix
+with a vector. Solves for x in</p>
+
+<pre><code>op(A) * x = y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>k</dt>
+<dd> Bandwidth of A (not counting the diagonal), k >= 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the y vector. On exit, it is
+  overwritten by the solution x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const float *a, size_t lda, float *x, size_t incx);
+void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const double *a, size_t lda, double *x, size_t incx);
+void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *x, size_t incx);
+void SolveBandedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, size_t k, const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="SolvePackedTrV"></a>
+<h2>SolvePackedTrV</h2>
+
+<p>Computes the product of the inverse of a packed triangular matrix
+with a vector. Solves for x in</p>
+
+<pre><code>op(A) * x = y
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+  If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On exit, it is
+  overwritten by op(A) * x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const float *ap, float *x, size_t incx);
+void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const double *ap, double *x, size_t incx);
+void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;float&gt; *ap,
+    std::complex&lt;float&gt; *x, size_t incx);
+void SolvePackedTrV(const char *uplo, const char *trans, const char *diag,
+    size_t n, const std::complex&lt;double&gt; *ap,
+    std::complex&lt;double&gt; *x, size_t incx);
+</code></pre>
+
+<hr />
+
+<a name="Rank1Update"></a>
+<h2>Rank1Update</h2>
+
+<p>Computes a rank-1 update to a general rectangular matrix.</p>
+
+<pre><code>A &lt;- alpha * x * y^T + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of A.</dd>
+<dt>n</dt>
+<dd> Number of columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length m.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector, length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void Rank1Update(size_t m, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy,
+    float *a, size_t lda);
+void Rank1Update(size_t m, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy,
+    double *a, size_t lda);
+void Rank1Update(size_t m, size_t n, const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; *y, size_t incy,
+    std::complex&lt;float&gt; *a, size_t lda);
+void Rank1Update(size_t m, size_t n, const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; *y, size_t incy,
+    std::complex&lt;double&gt; *a, size_t lda);
+</code></pre>
+
+<hr />
+
+<a name="ConjugateRank1Update"></a>
+<h2>ConjugateRank1Update</h2>
+
+<p>Computes a rank-1 update to a general rectangular matrix, where the
+row vector is conjugated.</p>
+
+<pre><code>A &lt;- alpha * x * y^H + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of A.</dd>
+<dt>n</dt>
+<dd> Number of columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length m.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector (conjugated),
+  length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void ConjugateRank1Update(size_t m, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy,
+    float *a, size_t lda);
+void ConjugateRank1Update(size_t m, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy,
+    double *a, size_t lda);
+void ConjugateRank1Update(size_t m, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; *y, size_t incy,
+    std::complex&lt;float&gt; *a, size_t lda);
+void ConjugateRank1Update(size_t m, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; *y, size_t incy,
+    std::complex&lt;double&gt; *a, size_t lda);
+</code></pre>
+
+<hr />
+
+<a name="HermRank1Update"></a>
+<h2>HermRank1Update</h2>
+
+<p>Computes a rank-1 update to a Hermitian square matrix, where the
+row vector is conjugated.</p>
+
+<pre><code>A &lt;- alpha * x * x^H + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void HermRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, float *a, size_t lda);
+void HermRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, double *a, size_t lda);
+void HermRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    std::complex&lt;float&gt; *a, size_t lda);
+void HermRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    std::complex&lt;double&gt; *a, size_t lda);
+</code></pre>
+
+<hr />
+
+<a name="PackedHermRank1Update"></a>
+<h2>PackedHermRank1Update</h2>
+
+<p>Computes a rank-1 update to a Hermitian square matrix, where the
+row vector is conjugated. The matrix is stored in packed format.</p>
+
+<pre><code>A &lt;- alpha * x * x^H + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void PackedHermRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, float *ap);
+void PackedHermRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, double *ap);
+void PackedHermRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx, std::complex&lt;float&gt; *ap);
+void PackedHermRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx, std::complex&lt;double&gt; *ap);
+</code></pre>
+
+<hr />
+
+<a name="HermRank2Update"></a>
+<h2>HermRank2Update</h2>
+
+<p>Computes a rank-2 update to a Hermitian square matrix.</p>
+
+<pre><code>A &lt;- alpha * x * y^H + conj(alpha) * y * x^H + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector, length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void HermRank2Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy,
+    float *a, size_t lda);
+void HermRank2Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy,
+    double *a, size_t lda);
+void HermRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; *y, size_t incy,
+    std::complex&lt;float&gt; *a, size_t lda);
+void HermRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; *y, size_t incy,
+    std::complex&lt;double&gt; *a, size_t lda);
+</code></pre>
+
+<hr />
+
+<a name="PackedHermRank2Update"></a>
+<h2>PackedHermRank2Update</h2>
+
+<p>Computes a rank-2 update to a Hermitian square matrix.
+The matrix is stored in packed format.</p>
+
+<pre><code>A &lt;- alpha * x * y^H + conj(alpha) * y * x^H + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector, length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void PackedHermRank2Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy, float *ap);
+void PackedHermRank2Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy, double *ap);
+void PackedHermRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx, const std::complex&lt;float&gt; *y,
+    size_t incy, std::complex&lt;float&gt; *ap);
+void PackedHermRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx, const std::complex&lt;double&gt; *y,
+    size_t incy, std::complex&lt;double&gt; *ap);
+</code></pre>
+
+<hr />
+
+<a name="SymRank1Update"></a>
+<h2>SymRank1Update</h2>
+
+<p>Computes a rank-1 update to a symmetric square matrix.</p>
+
+<pre><code>A &lt;- alpha * x * x^T + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SymRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, float *a, size_t lda);
+void SymRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, double *a, size_t lda);
+/*
+void SymRank1Update(const char *uplo, size_t n, const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx, std::complex&lt;float&gt; *a, size_t lda);
+void SymRank1Update(const char *uplo, size_t n, const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx, std::complex&lt;double&gt; *a, size_t lda);
+*/
+</code></pre>
+
+<hr />
+
+<a name="PackedSymRank1Update"></a>
+<h2>PackedSymRank1Update</h2>
+
+<p>Computes a rank-1 update to a symmetric square matrix.
+The matrix is stored in packed format.</p>
+
+<pre><code>A &lt;- alpha * x * x^T + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 update.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void PackedSymRank1Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, float *a);
+void PackedSymRank1Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, double *a);
+/*
+void PackedSymRank1Update(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx, std::complex&lt;float&gt; *a);
+void PackedSymRank1Update(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx, std::complex&lt;double&gt; *a);
+*/
+</code></pre>
+
+<hr />
+
+<a name="SymRank2Update"></a>
+<h2>SymRank2Update</h2>
+
+<p>Computes a rank-2 update to a symmetric square matrix.</p>
+
+<pre><code>A &lt;- alpha * x * y^T + alpha * y * x^T + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector, length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SymRank2Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy,
+    float *a, size_t lda);
+void SymRank2Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy,
+    double *a, size_t lda);
+/*
+void SymRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; *y, size_t incy,
+    std::complex&lt;float&gt; *a, size_t lda);
+void SymRank2Update(const char *uplo, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; *y, size_t incy,
+    std::complex&lt;double&gt; *a, size_t lda);
+*/
+</code></pre>
+
+<hr />
+
+<a name="PackedSymRank2Update"></a>
+<h2>PackedSymRank2Update</h2>
+
+<p>Computes a rank-2 update to a symmetric square matrix.
+The matrix is stored in packed format.</p>
+
+<pre><code>A &lt;- alpha * x * y^T + alpha * y * x^T + A
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector, length n.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>y</dt>
+<dd> Pointer to the first element of the y vector, length n.</dd>
+<dt>incy</dt>
+<dd> Increment between elements of the y vector, incy > 0.</dd>
+<dt>ap</dt>
+<dd> Pointer to the first element of A, length n*(n+1)/2.
+  If uplo = &ldquo;U&rdquo;, the columns of the upper triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[0,1],
+  and ap[2] is A[1,1], etc.
+  If uplo = &ldquo;L&rdquo;, the columns of the lower triangle of A are
+  stored sequentially, so ap[0] is A[0,0], ap[1] is A[1,0],
+  and ap[2] is A[2,0], etc.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void PackedSymRank2Update(const char *uplo, size_t n, const float &amp;alpha,
+    const float *x, size_t incx, const float *y, size_t incy, float *ap);
+void PackedSymRank2Update(const char *uplo, size_t n, const double &amp;alpha,
+    const double *x, size_t incx, const double *y, size_t incy, double *ap);
+/*
+void PackedSymRank2Update(const char *uplo, size_t n,
+const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *x, size_t incx,
+    const std::complex&lt;float&gt; *y, size_t incy, std::complex&lt;float&gt; *ap);
+void PackedSymRank2Update(const char *uplo, size_t n,
+const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *x, size_t incx,
+    const std::complex&lt;double&gt; *y, size_t incy, std::complex&lt;double&gt; *ap);
+*/
+</code></pre>
+
+<hr />
+
+<a name="MultMM"></a>
+<h2>MultMM</h2>
+
+<p>Computes the product of two general rectangular matrices.</p>
+
+<pre><code>C = alpha * op(A) * op(B) + beta * C
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>transa</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>transb</dt>
+<dd> If &ldquo;N&rdquo;, op(B) = B. If &ldquo;T&rdquo;, op(B) = B<sup>T</sup>. If &ldquo;C&rdquo;, op(B) = B<sup>H</sup>.</dd>
+<dt>m</dt>
+<dd> Number of rows of C, and number of rows of op(A).</dd>
+<dt>n</dt>
+<dd> Number of columns of C, and number of columns of op(B).</dd>
+<dt>k</dt>
+<dd> Number of columns of op(A), and number of rows of op(B).</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the product.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+   If transa = &ldquo;N&rdquo;, lda >= m, otherwise lda >= k.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B.
+   If transb = &ldquo;N&rdquo;, ldb >= k, otherwise lda >= n.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultMM(
+    const char *transa, const char *transb, size_t m, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda, const float *b, size_t ldb,
+    const float &amp;beta, float *c, size_t ldc);
+void MultMM(
+    const char *transa, const char *transb, size_t m, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda, const double *b, size_t ldb,
+    const double &amp;beta, double *c, size_t ldc);
+void MultMM(
+    const char *transa, const char *transb, size_t m, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *b, size_t ldb,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void MultMM(
+    const char *transa, const char *transb, size_t m, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *b, size_t ldb,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="MultSymM"></a>
+<h2>MultSymM</h2>
+
+<p>Computes the product of a symmetric square matrix with a general
+rectangular matrix</p>
+
+<pre><code>C = alpha * A * B + beta * C     if side = "L"
+C = alpha * B * A + beta * C     if side = "R"
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, the symmetric matrix A is applied from the left.
+   If &ldquo;R&rdquo;, the symmetric matrix A is applied from the right.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+   If &ldquo;L&rdquo;, the upper triangle of C is given.</dd>
+<dt>m</dt>
+<dd> Number of rows of C.</dd>
+<dt>n</dt>
+<dd> Number of columns of C.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the product.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the symmetric matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+   If side = &ldquo;L&rdquo;, lda >= m, otherwise lda >= n.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B, ldb >= m.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
+    const float &amp;alpha, const float *a, size_t lda, const float *b, size_t ldb,
+    const float &amp;beta, float *c, size_t ldc);
+void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
+    const double &amp;alpha, const double *a, size_t lda, const double *b, size_t ldb,
+    const double &amp;beta, double *c, size_t ldc);
+void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *b, size_t ldb,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void MultSymM(const char *side, const char *uplo, size_t m, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *b, size_t ldb,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="MultHermM"></a>
+<h2>MultHermM</h2>
+
+<p>Computes the product of a Hermitian square matrix with a general
+rectangular matrix</p>
+
+<pre><code>C = alpha * A * B + beta * C     if side = "L"
+C = alpha * B * A + beta * C     if side = "R"
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, the Hermitian matrix A is applied from the left.
+   If &ldquo;R&rdquo;, the Hermitian matrix A is applied from the right.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+   If &ldquo;L&rdquo;, the upper triangle of C is given.</dd>
+<dt>m</dt>
+<dd> Number of rows of C.</dd>
+<dt>n</dt>
+<dd> Number of columns of C.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the product.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the Hermitian matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+   If side = &ldquo;L&rdquo;, lda >= m, otherwise lda >= n.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B, ldb >= m.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
+    const float &amp;alpha, const float *a, size_t lda, const float *b, size_t ldb,
+    const float &amp;beta, float *c, size_t ldc);
+void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
+    const double &amp;alpha, const double *a, size_t lda, const double *b, size_t ldb,
+    const double &amp;beta, double *c, size_t ldc);
+void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *b, size_t ldb,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void MultHermM(const char *side, const char *uplo, size_t m, size_t n,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *b, size_t ldb,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="SymRankKUpdate"></a>
+<h2>SymRankKUpdate</h2>
+
+<p>Computes a rank-k update to a symmetric square matrix.</p>
+
+<pre><code>C &lt;- alpha * op(A) * op(A)^T + beta * C
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+  If &ldquo;L&rdquo;, the lower triangle of C is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of C.</dd>
+<dt>k</dt>
+<dd> If trans = &ldquo;N&rdquo;, k is the number of columns of A, otherwise
+  it is the number of rows of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise lda >= k.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float &amp;beta, float *c, size_t ldc);
+void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double &amp;beta, double *c, size_t ldc);
+void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void SymRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="HermRankKUpdate"></a>
+<h2>HermRankKUpdate</h2>
+
+<p>Computes a rank-k update to a Hermitian square matrix.</p>
+
+<pre><code>C &lt;- alpha * op(A) * op(A)^H + beta * C
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+  If &ldquo;L&rdquo;, the lower triangle of C is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of C.</dd>
+<dt>k</dt>
+<dd> If trans = &ldquo;N&rdquo;, k is the number of columns of A, otherwise
+  it is the number of rows of A.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise lda >= k.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float &amp;beta, float *c, size_t ldc);
+void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double &amp;beta, double *c, size_t ldc);
+void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const float &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const float &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void HermRankKUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const double &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const double &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="SymRank2KUpdate"></a>
+<h2>SymRank2KUpdate</h2>
+
+<p>Computes a rank-2k update to a symmetric square matrix.</p>
+
+<pre><code>C &lt;- alpha * A * B^T + alpha * B * A^T + beta * C
+</code></pre>
+
+<p>or</p>
+
+<pre><code>C &lt;- alpha * A^T * B + alpha * B^T * A + beta * C
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+  If &ldquo;L&rdquo;, the lower triangle of C is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, then C &lt;- alpha * A * B<sup>T</sup> + alpha * B * A<sup>T</sup> + beta * C
+  If &ldquo;T&rdquo;, then C &lt;- alpha * A<sup>T</sup> * B + alpha * B<sup>T</sup> * A + beta * C</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of C.</dd>
+<dt>k</dt>
+<dd> If trans = &ldquo;N&rdquo;, k is the number of columns of A and B,
+  otherwise it is the number of rows of A and B.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise lda >= k.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of the matrix B.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise ldb >= k.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *b, size_t ldb,
+    const float &amp;beta, float *c, size_t ldc);
+void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *b, size_t ldb,
+    const double &amp;beta, double *c, size_t ldc);
+void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *b, size_t ldb,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void SymRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *b, size_t ldb,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="HermRank2KUpdate"></a>
+<h2>HermRank2KUpdate</h2>
+
+<p>Computes a rank-2k update to a Hermitian square matrix.</p>
+
+<pre><code>C &lt;- alpha * A * B^H + conj(alpha) * B * A^H + beta * C
+</code></pre>
+
+<p>or</p>
+
+<pre><code>C &lt;- alpha * A^H * B + conj(alpha) * B^H * A + beta * C
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of C is given.
+  If &ldquo;L&rdquo;, the lower triangle of C is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, then C &lt;- alpha * A * B<sup>H</sup> + conj(alpha) * B * A<sup>H</sup> + beta * C
+  If &ldquo;C&rdquo;, then C &lt;- alpha * A<sup>H</sup> * B + conj(alpha) * B<sup>H</sup> * A + beta * C</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of C.</dd>
+<dt>k</dt>
+<dd> If trans = &ldquo;N&rdquo;, k is the number of columns of A and B,
+  otherwise it is the number of rows of A and B.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply to the rank-1 updates.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise lda >= k.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of the matrix B.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B.
+  If trans = &ldquo;N&rdquo;, lda >= n, otherwise ldb >= k.</dd>
+<dt>beta</dt>
+<dd> Scale factor to apply to C.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const float &amp;alpha, const float *a, size_t lda,
+    const float *b, size_t ldb,
+    const float &amp;beta, float *c, size_t ldc);
+void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const double &amp;alpha, const double *a, size_t lda,
+    const double *b, size_t ldb,
+    const double &amp;beta, double *c, size_t ldc);
+void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
+    const std::complex&lt;float&gt; *b, size_t ldb,
+    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
+    const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
+    const std::complex&lt;double&gt; *b, size_t ldb,
+    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+</code></pre>
+
+<hr />
+
+<a name="MultTrM"></a>
+<h2>MultTrM</h2>
+
+<p>Computes the product of a triangular matrix with a general
+rectangular matrix.</p>
+
+<pre><code>B &lt;- alpha * op(A) * B     or     B &lt;- alpha * B * op(A)
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, then op(A) is applied from the left.
+   If &ldquo;R&rdquo;, then op(A) is applied from the right.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, then A is upper triangular.
+   If &ldquo;L&rdquo;, then A is upper triangular.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+   If &ldquo;N&rdquo;, the digonal of A is given.</dd>
+<dt>m</dt>
+<dd> Number of rows of B, and the dimension of A when side = &ldquo;L&rdquo;.</dd>
+<dt>n</dt>
+<dd> Number of columns of B, and the dimension of A when
+   side = &ldquo;R&rdquo;.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+   If trans = &ldquo;N&rdquo;, lda >= m, otherwise lda >= n.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B. On exit, B is overwritten
+   with the product.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B, ldb >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void MultTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const float &amp;alpha, const float *a, size_t lda,
+    float *b, size_t ldb);
+void MultTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const double &amp;alpha, const double *a, size_t lda,
+    double *b, size_t ldb);
+void MultTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *b, size_t ldb);
+void MultTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *b, size_t ldb);
+</code></pre>
+
+<hr />
+
+<a name="SolveTrM"></a>
+<h2>SolveTrM</h2>
+
+<p>Computes the product of the inverse of a triangular matrix with a
+general rectangular matrix. Solves:</p>
+
+<pre><code>op(A) * X = alpha * B     or     X * op(A) = alpha * B
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, then op(A) and its inverse is applied from the left.
+   If &ldquo;R&rdquo;, then op(A) and its inverse is applied from the right.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, then A is upper triangular.
+   If &ldquo;L&rdquo;, then A is upper triangular.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+   If &ldquo;N&rdquo;, the digonal of A is given.</dd>
+<dt>m</dt>
+<dd> Number of rows of B, and the dimension of A when side = &ldquo;L&rdquo;.</dd>
+<dt>n</dt>
+<dd> Number of columns of B, and the dimension of A when
+   side = &ldquo;R&rdquo;.</dd>
+<dt>alpha</dt>
+<dd> Scale factor to apply.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+   If trans = &ldquo;N&rdquo;, lda >= m, otherwise lda >= n.</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B. On exit, B is overwritten
+   with the result X.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B, ldb >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>void SolveTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const float &amp;alpha, const float *a, size_t lda,
+    float *b, size_t ldb);
+void SolveTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const double &amp;alpha, const double *a, size_t lda,
+    double *b, size_t ldb);
+void SolveTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const std::complex&lt;float&gt; &amp;alpha,
+    const std::complex&lt;float&gt; *a, size_t lda,
+    std::complex&lt;float&gt; *b, size_t ldb);
+void SolveTrM(
+    const char *side, const char *uplo, const char *trans, const char *diag,
+    size_t m, size_t n, const std::complex&lt;double&gt; &amp;alpha,
+    const std::complex&lt;double&gt; *a, size_t lda,
+    std::complex&lt;double&gt; *b, size_t ldb);
+</code></pre>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<html>
+<head>
+<title></title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li>
+ <ul class="tocsub">
+  <li><a href="#RNP::LA::ApplyPermutations">RNP::LA::ApplyPermutations</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::LA::ApplyPermutations"></a>
+<h2>RNP::LA::ApplyPermutations</h2>
+
+<p>Applies a permutation vector to the rows or columns of a matrix.
+Used for example, with the pivot vector returned by an LU
+factorization.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, the permutation is applied from the left (row swaps).
+  If &ldquo;R&rdquo;, the permutation is applied from the right (column swaps).</dd>
+<dt>dir</dt>
+<dd> If &ldquo;F&rdquo;, the swaps are applied in forward order.
+  If &ldquo;B&rdquo;, the swaps are applied in backwards order.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrix.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing the matrix.</dd>
+<dt>ipiv</dt>
+<dd> Pivot vector. If side = &ldquo;L&rdquo;, length m.
+  If side = &ldquo;R&rdquo;, length n.</dd>
+<dt>off</dt>
+<dd> Offset at which to start applying the swaps. This is the
+  offset both into the vector ipiv, as well as the row or
+  column offset from the pointer specified by a.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ApplyPermutations(
+    const char *side, const char *dir,
+    size_t m, size_t n, T *A, size_t ldA, const size_t *ipiv,
+    size_t off = 0
+)
+</code></pre>
+</body>
+</html>

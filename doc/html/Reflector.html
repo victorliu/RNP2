@@ -1,0 +1,482 @@
+<html>
+<head>
+<title>RNP::LA::Reflector</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#RNP::LA::Reflector">RNP::LA::Reflector</a>
+ <ul class="tocsub">
+  <li><a href="#LastNonzeroColumnLimit">LastNonzeroColumnLimit</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#LastNonzeroRowLimit">LastNonzeroRowLimit</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Generate">Generate</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Apply">Apply</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GeneratePositive">GeneratePositive</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateBlockTr">GenerateBlockTr</a>
+  <ul class="tocsub">
+   <li><a href="#Further.Details">Further Details</a></li>
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ApplyBlock">ApplyBlock</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::LA::Reflector"></a>
+<h1>RNP::LA::Reflector</h1>
+
+<p>Computes elementary (Householder) reflectors and their effects.
+Both blocked and unblocked routines are given here.</p>
+
+<hr />
+
+<a name="LastNonzeroColumnLimit"></a>
+<h2>LastNonzeroColumnLimit</h2>
+
+<p>Scans a matrix for its last non-zero column. Returns one plus the
+column index (therefore it is the end of a range).
+This corresponds to Lapack routines ila_lc.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing the matrix, lda >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+size_t LastNonzeroColumnLimit(size_t m, size_t n, const T *a, size_t lda)
+</code></pre>
+
+<hr />
+
+<a name="LastNonzeroRowLimit"></a>
+<h2>LastNonzeroRowLimit</h2>
+
+<p>Scans a matrix for its last non-zero row. Returns one plus the
+row index (therefore it is the end of a range).
+This corresponds to Lapack routines ila_lr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing the matrix, lda >= m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+size_t LastNonzeroRowLimit(size_t m, size_t n, const T *a, size_t lda)
+</code></pre>
+
+<hr />
+
+<a name="Generate"></a>
+<h2>Generate</h2>
+
+<p>Generates an elementary reflector H of order n, such that</p>
+
+<pre><code>H' * [ alpha ] = [ beta ],   H' * H = I.
+     [   x   ]   [   0  ]
+</code></pre>
+
+<p>where alpha and beta are scalars, with beta real, and x is an
+(n-1)-element vector. H is represented in the form</p>
+
+<pre><code>H' = I - tau * [ 1 ] * [ 1 v' ],
+               [ v [
+</code></pre>
+
+<p>where tau is a scalar and v is an (n-1)-element vector.
+Note that H may be non-Hermitian.</p>
+
+<p>If the elements of x are all zero and alpha is real, then tau = 0
+and H is taken to be the identity matrix.</p>
+
+<p>Otherwise  1 &lt;= real(tau) &lt;= 2  and  abs(tau-1) &lt;= 1.</p>
+
+<p>The algorithm is as follows:</p>
+
+<pre><code>Pick beta = -sign(real(alpha)) * norm([alpha;x])
+Set tau = (beta - alpha) / beta
+Set v = x / (alpha - beta)
+</code></pre>
+
+<p>where rescalings have been left out. This corresponds to Lapack
+routines _larfg.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> The order of the elementary reflector.</dd>
+<dt>alpha</dt>
+<dd> On entry, the value alpha. On exit, it is overwritten
+    with the value beta.</dd>
+<dt>x</dt>
+<dd> Vector of length n-1. On entry, the vector x.
+    On exit, it is overwritten with the vector v.</dd>
+<dt>incx</dt>
+<dd> The increment between elements of x.</dd>
+<dt>tau</dt>
+<dd> The value tau.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Generate(size_t n, T *alpha, T *x, size_t incx, T *tau)
+</code></pre>
+
+<hr />
+
+<a name="Apply"></a>
+<h2>Apply</h2>
+
+<p>Applies an elementary reflector H to an m-by-n matrix C,
+from either the left or the right. H is represented in the form
+       H = I - tau * v * v'
+where tau is a scalar and v is a vector.</p>
+
+<p>To apply H' (the conjugate transpose of H), supply conj(tau)
+instead.
+This corresponds to Lapack routines _larf.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, form H * C. If &ldquo;R&rdquo;, form C * H.</dd>
+<dt>vone</dt>
+<dd> If true, the first element of V is assumed to be 1 instead
+    of the actual input value.</dd>
+<dt>vconj</dt>
+<dd> If true, elements after the first element of V are assumed
+    to be conjugated.</dd>
+<dt>m</dt>
+<dd> The number of rows of the matrix C.</dd>
+<dt>n</dt>
+<dd> The number of columns of the matrix C.</dd>
+<dt>v</dt>
+<dd> Length m if side = &ldquo;L&rdquo; or length n if side = &ldquo;R&rdquo;
+    The vector v in the representation of H. v is not used if
+    tau = 0.</dd>
+<dt>incv</dt>
+<dd> The increment between elements of v, incv > 0.</dd>
+<dt>tau</dt>
+<dd> The value tau in the representation of H.</dd>
+<dt>c</dt>
+<dd> On entry, the m-by-n matrix C.
+    On exit, C is overwritten by the matrix H * C if side = &ldquo;L&rdquo;,
+    or C * H if side = &ldquo;R&rdquo;.</dd>
+<dt>ldc</dt>
+<dd> The leading dimension of the array containing C, ldc >= m.</dd>
+<dt>work</dt>
+<dd> Workspace of size n if side = &ldquo;L&rdquo; or size m if side = &ldquo;R&rdquo;.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Apply(
+    const char *side, int vone, bool vconj, size_t m, size_t n,
+    const T *v, size_t incv, const T &amp;tau, T *c, size_t ldc, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="GeneratePositive"></a>
+<h2>GeneratePositive</h2>
+
+<p>Similar to Generate, except that beta is guaranteed to be positive.
+Generates an elementary reflector H of order n, such that</p>
+
+<pre><code>H' * [ alpha ] = [ beta ],   H' * H = I.
+     [   x   ]   [   0  ]
+</code></pre>
+
+<p>where alpha and beta are scalars, with beta real and positive,
+and x is an (n-1)-element vector. H is represented in the form</p>
+
+<pre><code>H' = I - tau * [ 1 ] * [ 1 v' ],
+               [ v [
+</code></pre>
+
+<p>where tau is a scalar and v is an (n-1)-element vector.
+Note that H may be non-Hermitian.</p>
+
+<p>If the elements of x are all zero and alpha is real, then tau = 0
+and H is taken to be the identity matrix.</p>
+
+<p>Otherwise  1 &lt;= real(tau) &lt;= 2  and  abs(tau-1) &lt;= 1.</p>
+
+<p>The algorithm is as follows:</p>
+
+<pre><code>Pick beta = -sign(real(alpha)) * norm([alpha;x])
+Set tau = (beta - alpha) / beta
+Set v = x / (alpha - beta)
+</code></pre>
+
+<p>where rescalings have been left out. This corresponds to Lapack
+routines _larfp. Note that this routine is significantly less
+robust than Generate, so unless positve beta is absolutely required,
+it is recommended to use Generate instead.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> The order of the elementary reflector.</dd>
+<dt>alpha</dt>
+<dd> On entry, the value alpha. On exit, it is overwritten
+    with the value beta.</dd>
+<dt>x</dt>
+<dd> Vector of length n-1. On entry, the vector x.
+    On exit, it is overwritten with the vector v.</dd>
+<dt>incx</dt>
+<dd> The increment between elements of x.</dd>
+<dt>tau</dt>
+<dd> The value tau.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt; // zlarfp, dlarfp, clarfp, slarfp
+void GeneratePositive(size_t n, T *alpha, T *x, size_t incx, T *tau)
+</code></pre>
+
+<hr />
+
+<a name="GenerateBlockTr"></a>
+<h2>GenerateBlockTr</h2>
+
+<p>Forms the triangular factor T of a complex block reflector H
+of order n, which is defined as a product of k elementary reflectors.</p>
+
+<p>If DIR = &lsquo;F&rsquo;, H = H(1) H(2) &hellip; H(k) and T is upper triangular;</p>
+
+<p>If DIR = &lsquo;B&rsquo;, H = H(k) &hellip; H(2) H(1) and T is lower triangular.</p>
+
+<p>If STOREV = &lsquo;C&rsquo;, the vector which defines the elementary reflector
+H(i) is stored in the i-th column of the array V, and</p>
+
+<p>   H  =  I - V * T * V<sup>H</sup></p>
+
+<p>If STOREV = &lsquo;R&rsquo;, the vector which defines the elementary reflector
+H(i) is stored in the i-th row of the array V, and</p>
+
+<p>   H  =  I - V<sup>H</sup> * T * V</p>
+
+<a name="Further.Details"></a>
+<h3>Further Details</h3>
+
+<p>The shape of the matrix V and the storage of the vectors which define
+the H(i) is best illustrated by the following example with n = 5 and
+k = 3. The elements equal to 1 are not stored; the corresponding
+array elements are modified but restored on exit. The rest of the
+array is not used.</p>
+
+<pre><code>dir = "F" and storev = "C":        dir = "F" and storev = "R":
+
+         V = [  1       ]             V = [  1 v1 v1 v1 v1 ]
+             [ v1  1    ]                 [     1 v2 v2 v2 ]
+             [ v1 v2  1 ]                 [        1 v3 v3 ]
+             [ v1 v2 v3 ]
+             [ v1 v2 v3 ]
+
+dir = "B" and storev = "C":        dir = "B" and storev = "R":
+
+         V = [ v1 v2 v3 ]             V = [ v1 v1  1       ]
+             [ v1 v2 v3 ]                 [ v2 v2 v2  1    ]
+             [  1 v2 v3 ]                 [ v3 v3 v3 v3  1 ]
+             [     1 v3 ]
+             [        1 ]
+</code></pre>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>dir</dt>
+<dd> Specifies the order in which the elementary reflectors are
+    multiplied to form the block reflector.
+    If &ldquo;F&rdquo;, H = H[0] H[1] &hellip; H[k-1] (Forward).
+    If &ldquo;B&rdquo;, H = H[k-1] &hellip; H[1] H[0] (Backward).</dd>
+<dt>storev</dt>
+<dd> Specifies how the vectors which define the elementary
+    reflectors are stored (see also Further Details):
+    If &ldquo;C&rdquo;: columnwise. If &ldquo;R&rdquo;: rowwise.</dd>
+<dt>n</dt>
+<dd> The order of the block reflector H.</dd>
+<dt>k</dt>
+<dd> The order of the triangular factor T (the number of
+    elementary reflectors), k >= 1.</dd>
+<dt>v</dt>
+<dd> Pointer to the first element of the matrix V.
+    If storev = &ldquo;C&rdquo;, V has dimensions n-by-k.
+    If storev = &ldquo;R&rdquo;, V has dimensions k-by-n.</dd>
+<dt>ldv</dt>
+<dd> The leading dimension of the array containing V.
+    If storev = &ldquo;C&rdquo;, ldv >= n. If storev = &ldquo;R&rdquo;, ldv >= k.</dd>
+<dt>tau</dt>
+<dd> tau[i] must contain the scalar factor of the elementary
+    reflector H[i], length k.</dd>
+<dt>t</dt>
+<dd> The k-by-k triangular factor T of the block reflector.
+    If dir = &ldquo;F&rdquo;, T is upper triangular; if dir = &ldquo;B&rdquo;, T is
+    lower triangular. The rest of the array is not used.</dd>
+<dt>ldt</dt>
+<dd> The leading dimension of the array containing T, ldt >= k.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void GenerateBlockTr(
+    const char *dir, const char *storev,
+    size_t n, size_t k, const T *v, size_t ldv, const T *tau,
+    T *t, size_t ldt
+)
+</code></pre>
+
+<hr />
+
+<a name="ApplyBlock"></a>
+<h2>ApplyBlock</h2>
+
+<p>Applies a block reflector H or its conjugate transpose H<sup>H</sup> to an
+m-by-n matrix C, from either the left or the right. See the
+documentation for GenerateBlockTr for how the vectors are packed
+into the V matrix.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<hr />
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, apply H or H<sup>H</sup> from the left.
+    If &ldquo;R&rdquo;, apply H or H<sup>H</sup> from the right.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, apply H (No transpose)
+    If &ldquo;C&rdquo;, apply H<sup>H</sup> (Conjugate transpose)</dd>
+<dt>dir</dt>
+<dd> Indicates how H is formed from a product of elementary
+    reflectors.
+    If &ldquo;F&rdquo;, H = H[0] H[1] &hellip; H[k-1] (Forward).
+    If &ldquo;B&rdquo;, H = H[k-1] &hellip; H[1] H[0] (Backward).</dd>
+<dt>storev</dt>
+<dd> Indicates how the vectors which define the elementary
+    reflectors are stored:
+    If &ldquo;C&rdquo;, columnwise. If &ldquo;R&rdquo;, rowwise.</dd>
+<dt>m</dt>
+<dd> The number of rows of the matrix C.</dd>
+<dt>n</dt>
+<dd> The number of columns of the matrix C.</dd>
+<dt>k</dt>
+<dd> The order of the matrix T (the number of elementary
+    reflectors whose product defines the block reflector).</dd>
+<dt>v</dt>
+<dd> Pointer to the first element of the matrix V.
+    V has k columns if storev = &ldquo;C&rdquo;,
+          m columns if storev = &ldquo;R&rdquo; and side = &ldquo;L&rdquo;,
+       or n columns if storev = &ldquo;R&rdquo; and side = &ldquo;R&rdquo;</dd>
+<dt>ldv</dt>
+<dd> The leading dimension of the array containing V.
+    If storev = &ldquo;C&rdquo; and side = &ldquo;L&rdquo;, ldv >= m.
+    if storev = &ldquo;C&rdquo; and side = &ldquo;R&rdquo;, ldv >= n.
+    if storev = &ldquo;R&rdquo;, ldv >= k.</dd>
+<dt>t</dt>
+<dd> The triangular k-by-k matrix T in the representation of the
+    block reflector.</dd>
+<dt>ldt</dt>
+<dd> The leading dimension of the array T, ldt >= k.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of C. On entry, the m-by-n
+    matrix C. On exit, C is overwritten by H * C or H<sup>H</sup> * C
+    or C * H or C * H<sup>H</sup>.</dd>
+<dt>ldc</dt>
+<dd> The leading dimension of the array containing C, ldc >= m.</dd>
+<dt>work</dt>
+<dd> Workspace of dimension ldwork-by-k.</dd>
+<dt>ldwork</dt>
+<dd> The leading dimension of the array containing work.
+    If side = &lsquo;L&rsquo;, ldwork >= max(1,N);
+    if side = &lsquo;R&rsquo;, ldwork >= max(1,M).</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ApplyBlock(
+    const char *side, const char *trans, const char *dir, const char *storev,
+    size_t m, size_t n, size_t k, const T *v, size_t ldv,
+    const T *t, size_t ldt, T *c, size_t ldc, T *work, size_t ldwork
+)
+</code></pre>
+</body>
+</html>

@@ -1,12 +1,9 @@
 #ifndef RNP_QR_HPP_INCLUDED
 #define RNP_QR_HPP_INCLUDED
 
-#include <iostream>
 #include <cstddef>
 #include <RNP/BLAS.hpp>
 #include "Reflector.hpp"
-
-#include <iostream>
 
 namespace RNP{
 namespace LA{
@@ -17,8 +14,22 @@ namespace QR{
 // ===========
 // Computes the QR factorization and operations involving Q.
 // For tall matrices, R is upper triangular. For fat matrices, R is
-// upper trapezoidal.
+// upper trapezoidal. The decomposition is a product A = Q * R, with Q
+// packed into the lower triangle of A, and an additional tau vector
+// representing the scale factors of the reflector representation of Q.
+// The storate scheme is shown below, with 'A' representing elements of
+// the matrix A, 'R' representing elements of the the R factor, 'Q'
+// representing elements of the reflector vectors which implicitly form
+// Q, and 'T' the elements of the auxiliary array tau.
 //
+//     A A A   R R R          A A A A A   R R R R R  T
+//     A A A   Q R R          A A A A A = Q R R R R  T
+//     A A A = Q Q R  T       A A A A A   Q Q R R R  T
+//     A A A   Q Q Q  T
+//     A A A   Q Q Q  T
+//
+// When m >= n, Q is m-by-n and R is n-by-n upper triangular.
+// When m < n, Q is m-by-m and R is m-by-n upper trapezoidal.
 
 ///////////////////////////////////////////////////////////////////////
 // Tuning
@@ -29,14 +40,14 @@ namespace QR{
 //
 template <typename T>
 struct Tuning{
-	static size_t factor_block_size_opt(size_t m, size_t n){ return 64; }
-	static size_t factor_block_size_min(size_t m, size_t n){ return 64; }
-	static size_t factor_crossover_size(size_t m, size_t n){ return 64; }
-	static size_t multQ_block_size_opt(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 64; }
-	static size_t multQ_block_size_min(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 64; }
-	static size_t genQ_block_size_opt(size_t m, size_t n, size_t k){ return 64; }
-	static size_t genQ_block_size_min(size_t m, size_t n, size_t k){ return 64; }
-	static size_t genQ_crossover_size(size_t m, size_t n, size_t k){ return 64; }
+	static size_t factor_block_size_opt(size_t m, size_t n){ return 32; }
+	static size_t factor_block_size_min(size_t m, size_t n){ return 2; }
+	static size_t factor_crossover_size(size_t m, size_t n){ return 128; }
+	static size_t multQ_block_size_opt(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 32; }
+	static size_t multQ_block_size_min(const char *side, const char *trans, size_t m, size_t n, size_t k){ return 2; }
+	static size_t genQ_block_size_opt(size_t m, size_t n, size_t k){ return 32; }
+	static size_t genQ_block_size_min(size_t m, size_t n, size_t k){ return 2; }
+	static size_t genQ_crossover_size(size_t m, size_t n, size_t k){ return 128; }
 };
 
 
@@ -45,7 +56,7 @@ struct Tuning{
 // ----------------
 // Computes a QR factorization of an m-by-n matrix A = Q * R.
 // The matrix Q is represented as a product of elementary reflectors
-//   Q = H[1] H[2] ... H[k-1], where k = min(m,n).
+//   Q = H[0] H[1] ... H[k-1], where k = min(m,n).
 // Each H[i] has the form
 //   H[i] = I - tau * v * v^H
 // where tau is a scalar, and v is a vector with v[0..i] = 0 and
@@ -59,7 +70,7 @@ struct Tuning{
 // n    Number of columns of the matrix A.
 // a    Pointer to the first element of A. On exit, the upper
 //      triangle of A contains the R factor, and the lower triangle
-//      stores the vectors v of the elementary reflectors.
+//      stores the vectors v of the elementary reflectors in columns.
 // lda  Leading dimension of the array containing A (lda >= m).
 // tau  Output vector of tau's.
 // work Workspace of size n.
@@ -95,7 +106,7 @@ void Factor_unblocked(
 // ------
 // Computes a QR factorization of an m-by-n matrix A = Q * R.
 // The matrix Q is represented as a product of elementary reflectors
-//   Q = H[1] H[2] ... H[k-1], where k = min(m,n).
+//   Q = H[0] H[1] ... H[k-1], where k = min(m,n).
 // Each H[i] has the form
 //   H[i] = I - tau * v * v^H
 // where tau is a scalar, and v is a vector with v[0..i] = 0 and
@@ -108,7 +119,7 @@ void Factor_unblocked(
 // n     Number of columns of the matrix A.
 // a     Pointer to the first element of A. On exit, the upper
 //       triangle of A contains the R factor, and the lower triangle
-//       stores the vectors v of the elementary reflectors.
+//       stores the vectors v of the elementary reflectors in columns.
 // lda   Leading dimension of the array containing A (lda >= m).
 // tau   Output vector of tau's.
 // lwork Length of workspace (>= n). If *lwork == 0 or NULL == work,
@@ -121,6 +132,7 @@ void Factor(
 ){
 	RNPAssert(lda >= m);
 	RNPAssert(NULL != lwork);
+	RNPAssert(0 == *lwork || *lwork >= m);
 	const size_t k = (m < n ? m : n);
 	if(0 == k){
 		return;
@@ -224,8 +236,11 @@ void MultQ_unblocked(
 	const char *side, const char *trans, size_t m, size_t n, size_t k,
 	const T *a, size_t lda, const T *tau, T *c, size_t ldc, T *work
 ){
+	RNPAssert(ldc >= m);
 	const bool left = ('L' == side[0]);
 	const bool notran = ('N' == trans[0]);
+	RNPAssert((left && k <= m) || (!left && k <= n));
+	RNPAssert(lda >= k);
 
 	if(m < 1 || n < 1 || k < 1){ return; }
 	
@@ -328,9 +343,11 @@ void MultQ(
 	RNPAssert(ldc >= m);
 	if(0 == m || 0 == n || 0 == k){ return; }
 	const bool left = ('L' == side[0]);
-	RNPAssert((left && k <= m) || (!left && k <= n));
-	RNPAssert((left && lda >= m) || (!left && lda >= n));
 	const bool notran = ('N' == trans[0]);
+	
+	RNPAssert((left && k <= m) || (!left && k <= n));
+	RNPAssert(lda >= k);
+	
 	const size_t nq = (left ? m : n);
 	const size_t nw = (left ? n : m);
 	
@@ -390,8 +407,8 @@ void MultQ(
 				);
 			}
 		}else{
-			size_t i = (k/nb)*nb;
-			do{
+			size_t i = ((k-1)/nb)*nb + nb;
+			do{ i -= nb;
 				size_t ib = (k < nb+i ? k-i : nb);
 				Reflector::GenerateBlockTr("F","C", nq-i, ib, &a[i+i*lda], lda, &tau[i], t, ldt);
 
@@ -406,16 +423,14 @@ void MultQ(
 					side, trans, "F", "C", mi, ni, ib,
 					&a[i+i*lda], lda, t, ldt, &c[ic+jc*ldc], ldc, work, ldwork
 				);
-				if(0 == i){ break; }
-				i -= nb;
-			}while(1);
+			}while(i > 0);
 		}
 	}
 }
 
 ///////////////////////////////////////////////////////////////////////
-// GenerateQ
-// ---------
+// GenerateQ_unblocked
+// -------------------
 // From an existing QR factorization, generates the unitary matrix Q.
 // The original matrix containing the factorization is overwritten
 // by Q.
@@ -439,6 +454,9 @@ template <class T>
 void GenerateQ_unblocked(
 	size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
 ){
+	RNPAssert(m >= n);
+	RNPAssert(k <= n);
+	RNPAssert(lda >= m);
 	if(n < 1){ return; }
 
 	// Initialise columns k+1:n to columns of the unit matrix
@@ -532,13 +550,12 @@ void GenerateQ(
 			}
 		}
 	}
-	//ki = nb;
 	if(kk < n){
 		GenerateQ_unblocked(m-kk, n-kk, k-kk, &a[kk+kk*lda], lda, &tau[kk], work);
 	}
 	if(kk > 0){
-		size_t i = ki;
-		do{
+		size_t i = ki + nb;
+		do{ i -= nb;
 			const size_t ib = (nb+i < k ? nb : k-i);
 			if(i+ib < n){
 				Reflector::GenerateBlockTr("F", "C", m-i, ib, &a[i+i*lda], lda, &tau[i], work, ldwork);
@@ -552,8 +569,7 @@ void GenerateQ(
 					a[l+j*lda] = T(0);
 				}
 			}
-			if(0 == i){ break; }else{ i -= nb; }
-		}while(1);
+		}while(i > 0);
 	}
 }
 

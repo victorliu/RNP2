@@ -1,0 +1,286 @@
+<html>
+<head>
+<title>Random</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#Random">Random</a>
+ <ul class="tocsub">
+  <li><a href="#UniformRealVector">UniformRealVector</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Distribution">Distribution</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateVector">GenerateVector</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#UniformReal">UniformReal</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+  </ul>
+  </li>
+  <li><a href="#Uniform">Uniform</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+  </ul>
+  </li>
+  <li><a href="#StandardNormal">StandardNormal</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+  </ul>
+  </li>
+  <li><a href="#UnitDisc">UnitDisc</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+  </ul>
+  </li>
+  <li><a href="#Unitcircle">Unitcircle</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="Random"></a>
+<h1>Random</h1>
+
+<p>Random number generation routines. These are not cryptographically
+random and are intended for numerical purposes only.</p>
+
+<hr />
+
+<a name="UniformRealVector"></a>
+<h2>UniformRealVector</h2>
+
+<p>Returns a vector of n random real numbers from a uniform
+distribution in [0,1).</p>
+
+<p>This routine uses a multiplicative congruential method with modulus
+2<sup>48</sup> and multiplier 33952834046453. For reference, see:</p>
+
+<blockquote><p>G.S.Fishman, &lsquo;Multiplicative congruential random number
+generators with modulus 2<sup>b</sup>: an exhaustive analysis for
+b = 32 and a partial analysis for b = 48&rsquo;,
+Math. Comp. 189, pp 331-344, 1990).</p></blockquote>
+
+<p>48-bit integers are stored in 4 integer array elements with 12 bits
+per element. Hence the routine is portable across machines with
+integers of 32 bits or more.</p>
+
+<p>This corresponds approximately to the Lapack routines _laruv.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> On entry, the seed of the random number generator; the array
+    elements must be between 0 and 4095, and iseed[3] must be
+    odd. On exit, the seed is updated.
+    If iseed is NULL, then an internal seed is used.</dd>
+<dt>n</dt>
+<dd> The number of random numbers to be generated.</dd>
+<dt>x</dt>
+<dd> Output vector of the generated random numbers of length n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt; // T must be a real number type
+void UniformRealVector(size_t n, T *x, int iseed[4] = NULL){
+</code></pre>
+
+<hr />
+
+<a name="Distribution"></a>
+<h2>Distribution</h2>
+
+<p>The enumeration of allowable random number distributions</p>
+
+<ul>
+<li>Uniform01:  The uniform distribution on [0,1). For complex numbers
+            the real and imaginary parts are independently drawn.</li>
+<li>Uniform_11: The uniform distribution on [-1,1). For complex numbers
+            the real and imaginary parts are independently drawn.</li>
+<li>Normal01:   The standoard normal distribution. For complex numbers
+            the real and imaginary parts are independently drawn.</li>
+<li>UnitDisc:   The uniform distribution within the unit disc. For real
+            numbers this is the same as Uniform_11.</li>
+<li>UnitCircle: The uniform distribution on the unit circle. For real
+            numbers this is the uniform distribution on the set
+            {-1,1}.</li>
+</ul>
+
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>enum Distribution{
+</code></pre>
+
+<hr />
+
+<a name="GenerateVector"></a>
+<h2>GenerateVector</h2>
+
+<p>Generates a vector of numbers each drawn from a specified
+distribution. This corresponds approximately to the Lapack
+routines _larnv.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>dist</dt>
+<dd> The distribution to draw from (see documentation on
+   Distribution).</dd>
+<dt>n</dt>
+<dd> The length of the vector.</dd>
+<dt>x</dt>
+<dd> The output vector (length n, increment must be 1).</dd>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void GenerateVector(
+    Distribution::Distribution dist, size_t n, T *x,
+    int iseed[4] = NULL
+){
+</code></pre>
+
+<hr />
+
+<a name="UniformReal"></a>
+<h2>UniformReal</h2>
+
+<p>Generates a single number from the uniform distribution in the
+interval [0,1). This routine returns a real number.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<p>template <typename T>
+typename Traits<T>::real_type UniformReal(int iseed[4] = NULL){</p></dd>
+</dl>
+
+<hr />
+
+<a name="Uniform"></a>
+<h2>Uniform</h2>
+
+<p>Generates a single number from the uniform distribution in the
+interval [0,1).
+For complex numbers, the real and imaginary parts are each drawn
+from this distribution.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<p>template <typename T>
+T Uniform(int iseed[4] = NULL){</p></dd>
+</dl>
+
+<hr />
+
+<a name="StandardNormal"></a>
+<h2>StandardNormal</h2>
+
+<p>Generates a single number from the standard normal distribution.
+For complex numbers, the real and imaginary parts are each drawn
+from this distribution.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<p>template <typename T>
+T StandardNormal(int iseed[4] = NULL){</p></dd>
+</dl>
+
+<hr />
+
+<a name="UnitDisc"></a>
+<h2>UnitDisc</h2>
+
+<p>Generates a single number uniformly distributed within the unit
+circle. For real numbers, this is the uniform distribution on the
+interval [0,1).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<p>template <typename T>
+T UnitDisc(int iseed[4] = NULL){</p></dd>
+</dl>
+
+<hr />
+
+<a name="Unitcircle"></a>
+<h2>Unitcircle</h2>
+
+<p>Generates a single number uniformly distributed on the unit circle.
+For real numbers, this is the uniform distribution on the set
+{-1,1}.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>iseed</dt>
+<dd> The seed array. See documentation for UniformRealVector.
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<p>template <typename T>
+T Unitcircle(int iseed[4] = NULL){</p></dd>
+</dl>
+</body>
+</html>

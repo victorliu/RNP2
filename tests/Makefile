@@ -4,6 +4,12 @@ LIBS = -lblas $(DEBUGLIB)
 
 TESTS = \
 	test_symtridiag_qr \
+	test_rq_tall \
+	test_rq_fat \
+	test_lq_tall \
+	test_lq_fat \
+	test_ql_tall \
+	test_ql_fat \
 	test_qr_tall \
 	test_qr_fat \
 	test_random \
@@ -22,6 +28,16 @@ test_qr_tall: test_qr_tall.cpp
 	g++ $(CFLAGS) test_qr_tall.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 test_ql_tall: test_ql_tall.cpp
 	g++ $(CFLAGS) test_ql_tall.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
+test_ql_fat: test_ql_fat.cpp
+	g++ $(CFLAGS) test_ql_fat.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
+test_lq_tall: test_lq_tall.cpp
+	g++ $(CFLAGS) test_lq_tall.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
+test_lq_fat: test_lq_fat.cpp
+	g++ $(CFLAGS) test_lq_fat.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
+test_rq_tall: test_rq_tall.cpp
+	g++ $(CFLAGS) test_rq_tall.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
+test_rq_fat: test_rq_fat.cpp
+	g++ $(CFLAGS) test_rq_fat.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
 test_symtridiag_qr: test_symtridiag_qr.cpp
 	g++ $(CFLAGS) test_symtridiag_qr.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 #test_lu_obj: test_lu_obj.cpp

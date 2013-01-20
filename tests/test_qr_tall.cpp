@@ -173,6 +173,32 @@ void test_qr(size_t m, size_t n){
 		std::cout << "Q' * Q - I norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
 	}
 	
+	// Form Q*R
+	//  Put R in QQ for now
+	RNP::BLAS::Set(m, n, T(0), T(0), QQ, m);
+	RNP::LA::Triangular::Copy("U", "N", m, n, Afac, m, QQ, m);
+	if(0){
+		std::cout << "QQ = R:" << std::endl;
+		RNP::Matrix<T> mB(m, n, QQ, m);
+		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
+	}
+	RNP::BLAS::MultMM("N", "N", m, n, n, T(1), Q, m, QQ, m, T(0), B, m);
+	if(0){
+		std::cout << "B = Q*R:" << std::endl;
+		RNP::Matrix<T> mB(m, n, B, m);
+		std::cout << RNP::IO::Chop(mB) << std::endl << std::endl;
+	}
+	// We should recover the original matrix
+	if(1){
+		T sum = 0;
+		for(size_t j = 0; j < n; ++j){
+			for(size_t i = 0; i < m; ++i){
+				sum += RNP::Traits<T>::abs(A[i+j*m] - B[i+j*m]);
+			}
+		}
+		std::cout << "(A - Q*R) norm-1 error: " << std::abs(sum)*rsnrm << std::endl;
+	}
+	
 	// Generate the columns of Q corresponding to the nullspace of A'
 	RNP::BLAS::Set(m, m, T(0), T(1), Q, m);
 	RNP::LA::QR::MultQ("L", "N", m, m, n, Afac, m, tau, Q, m, &lwork, work);

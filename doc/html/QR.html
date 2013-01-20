@@ -1,0 +1,445 @@
+<html>
+<head>
+<title>RNP::LA::QR</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#RNP::LA::QR">RNP::LA::QR</a>
+ <ul class="tocsub">
+  <li><a href="#Tuning">Tuning</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Factor_unblocked">Factor_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Factor">Factor</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultQ_unblocked">MultQ_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultQ">MultQ</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateQ_unblocked">GenerateQ_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateQ">GenerateQ</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::LA::QR"></a>
+<h1>RNP::LA::QR</h1>
+
+<p>Computes the QR factorization and operations involving Q.
+For tall matrices, R is upper triangular. For fat matrices, R is
+upper trapezoidal. The decomposition is a product A = Q * R, with Q
+packed into the lower triangle of A, and an additional tau vector
+representing the scale factors of the reflector representation of Q.
+The storate scheme is shown below, with &lsquo;A&rsquo; representing elements of
+the matrix A, &lsquo;R&rsquo; representing elements of the the R factor, &lsquo;Q&rsquo;
+representing elements of the reflector vectors which implicitly form
+Q, and &rsquo;T' the elements of the auxiliary array tau.</p>
+
+<pre><code>A A A   R R R          A A A A A   R R R R R  T
+A A A   Q R R          A A A A A = Q R R R R  T
+A A A = Q Q R  T       A A A A A   Q Q R R R  T
+A A A   Q Q Q  T
+A A A   Q Q Q  T
+</code></pre>
+
+<p>When m >= n, Q is m-by-n and R is n-by-n upper triangular.
+When m &lt; n, Q is m-by-m and R is m-by-n upper trapezoidal.</p>
+
+<hr />
+
+<a name="Tuning"></a>
+<h2>Tuning</h2>
+
+<p>Specialize this class to tune the block sizes. The optimal block
+size should be greater than or equal to the minimum block size.
+The value of the crossover determines when to enable blocking.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+struct Tuning
+</code></pre>
+
+<hr />
+
+<a name="Factor_unblocked"></a>
+<h2>Factor_unblocked</h2>
+
+<p>Computes a QR factorization of an m-by-n matrix A = Q * R.
+The matrix Q is represented as a product of elementary reflectors
+  Q = H[0] H[1] &hellip; H[k-1], where k = min(m,n).
+Each H[i] has the form
+  H[i] = I - tau * v * v<sup>H</sup>
+where tau is a scalar, and v is a vector with v[0..i] = 0 and
+v[i] = 1; v[i+1..m] is stored, upon exit, in A[i+1..m,i], and
+tau in tau[i].
+This routine uses only level 2 BLAS.
+Equivalent to Lapack routines _geqr2.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix A.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. On exit, the upper
+ triangle of A contains the R factor, and the lower triangle
+ stores the vectors v of the elementary reflectors in columns.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= m).</dd>
+<dt>tau</dt>
+<dd> Output vector of tau&rsquo;s.</dd>
+<dt>work</dt>
+<dd> Workspace of size n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Factor_unblocked(
+    size_t m, size_t n, T *a, size_t lda, T *tau, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="Factor"></a>
+<h2>Factor</h2>
+
+<p>Computes a QR factorization of an m-by-n matrix A = Q * R.
+The matrix Q is represented as a product of elementary reflectors
+  Q = H[0] H[1] &hellip; H[k-1], where k = min(m,n).
+Each H[i] has the form
+  H[i] = I - tau * v * v<sup>H</sup>
+where tau is a scalar, and v is a vector with v[0..i] = 0 and
+v[i] = 1; v[i+1..m] is stored, upon exit, in A[i+1..m,i], and
+tau in tau[i].
+Equivalent to Lapack routines _geqrf.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix A.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. On exit, the upper
+  triangle of A contains the R factor, and the lower triangle
+  stores the vectors v of the elementary reflectors in columns.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= m).</dd>
+<dt>tau</dt>
+<dd> Output vector of tau&rsquo;s.</dd>
+<dt>lwork</dt>
+<dd> Length of workspace (>= n). If *lwork == 0 or NULL == work,
+  then the optimal size is returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Factor(
+    size_t m, size_t n, T *a, size_t lda, T *tau, size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="MultQ_unblocked"></a>
+<h2>MultQ_unblocked</h2>
+
+<p>From an existing QR factorization, multiplies a given matrix by the
+unitary matrix Q. The given m-by-n matrix C is overwritten with:</p>
+
+<table>
+<thead>
+<tr>
+<th>trans </th>
+<th> side = &ldquo;L&rdquo;   </th>
+<th> side = &ldquo;R&rdquo;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&ldquo;N&rdquo;  </td>
+<td>   Q   * C    </td>
+<td>  C * Q</td>
+</tr>
+<tr>
+<td>&ldquo;C&rdquo;  </td>
+<td>   Q<sup>H</sup> * C    </td>
+<td>  C * Q<sup>H</sup></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>This routine uses only level 2 BLAS.
+Equivalent to Lapack routines <em>unm2r and </em>orm2r.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, apply Q or Q<sup>H</sup> from the left. If &ldquo;R&rdquo;, apply Q or
+  Q<sup>H</sup> from the right.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, apply Q. If &ldquo;C&rdquo;, apply Q'.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrix C.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix C.</dd>
+<dt>k</dt>
+<dd> Number of elementary reflectors to apply.
+  If side = &ldquo;L&rdquo;, k &lt;= m. If side = &ldquo;R&rdquo;, k &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the factorization. The i-th column should contain
+  the vector which defines the i-th elementary reflector for
+  i = 0..k-1.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If side = &ldquo;L&rdquo;, lda >= m. If side = &ldquo;R&rdquo;, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s, length k.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C.</dd>
+<dt>work</dt>
+<dd> Workspace.
+  If side = &ldquo;L&rdquo;, length n. If side = &ldquo;R&rdquo;, length m.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void MultQ_unblocked(
+    const char *side, const char *trans, size_t m, size_t n, size_t k,
+    const T *a, size_t lda, const T *tau, T *c, size_t ldc, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="MultQ"></a>
+<h2>MultQ</h2>
+
+<p>From an existing QR factorization, multiplies a given matrix by the
+unitary matrix Q. The given m-by-n matrix C is overwritten with:</p>
+
+<table>
+<thead>
+<tr>
+<th>trans </th>
+<th> side = &ldquo;L&rdquo;   </th>
+<th> side = &ldquo;R&rdquo;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&ldquo;N&rdquo;  </td>
+<td>   Q   * C    </td>
+<td>  C * Q</td>
+</tr>
+<tr>
+<td>&ldquo;C&rdquo;  </td>
+<td>   Q<sup>H</sup> * C    </td>
+<td>  C * Q<sup>H</sup></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Equivalent to Lapack routines <em>unmqr and </em>ormqr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, apply Q or Q<sup>H</sup> from the left. If &ldquo;R&rdquo;, apply Q or
+  Q<sup>H</sup> from the right.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, apply Q. If &ldquo;C&rdquo;, apply Q'.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrix C.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix C.</dd>
+<dt>k</dt>
+<dd> Number of elementary reflectors to apply.
+  If side = &ldquo;L&rdquo;, k &lt;= m. If side = &ldquo;R&rdquo;, k &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the factorization. The i-th column should contain
+  the vector which defines the i-th elementary reflector for
+  i = 0..k-1.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If side = &ldquo;L&rdquo;, lda >= m. If side = &ldquo;R&rdquo;, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s, length k.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C.</dd>
+<dt>lwork</dt>
+<dd> Lenth of workspace.
+  If side = &ldquo;L&rdquo;, lwork >= n. If side = &ldquo;R&rdquo;, lwork >= m.
+  If *lwork == 0 or NULL == work, then the optimal size is
+  returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void MultQ(
+    const char *side, const char *trans, size_t m, size_t n, size_t k,
+    const T *a, size_t lda, const T *tau, T *c, size_t ldc,
+    size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="GenerateQ_unblocked"></a>
+<h2>GenerateQ_unblocked</h2>
+
+<p>From an existing QR factorization, generates the unitary matrix Q.
+The original matrix containing the factorization is overwritten
+by Q.
+This routine uses only level 2 BLAS.
+Equivalent to Lapack routines <em>ung2r and </em>org2r.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix Q.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix Q, m >= n.</dd>
+<dt>k</dt>
+<dd> Number of elementary reflectors, k &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the factorization. The i-th column should contain
+  the vector which defines the i-th elementary reflector for
+  i = 0..k-1. On exit, the matrix Q.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing Q, lda >= m.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s, length k.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C.</dd>
+<dt>work</dt>
+<dd> Workspace of size n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;class T&gt;
+void GenerateQ_unblocked(
+    size_t m, size_t n, size_t k, T *a, size_t lda, const T *tau, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="GenerateQ"></a>
+<h2>GenerateQ</h2>
+
+<p>From an existing QR factorization, generates the unitary matrix Q.
+The original matrix containing the factorization is overwritten
+by Q.
+Equivalent to Lapack routines <em>ungqr and </em>orgqr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>m</dt>
+<dd> Number of rows of the matrix Q.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix Q, m >= n.</dd>
+<dt>k</dt>
+<dd> Number of elementary reflectors, k &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the factorization. The i-th column should contain
+  the vector which defines the i-th elementary reflector for
+  i = 0..k-1. On exit, the matrix Q.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing Q, lda >= m.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s, length k.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C.</dd>
+<dt>lwork</dt>
+<dd> Lenth of workspace, lwork >= n.
+  If *lwork == 0 or NULL == work, then the optimal size is
+  returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;class T&gt;
+void GenerateQ(
+    size_t m, size_t n, size_t k, T *a, size_t lda,
+    const T *tau, size_t *lwork, T *work
+)
+</code></pre>
+</body>
+</html>
