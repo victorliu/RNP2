@@ -1988,11 +1988,11 @@ void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const std::complex<float> &alpha, const std::complex<float> *a, size_t lda,
 	const std::complex<float> *b, size_t ldb,
-	const std::complex<float> &beta, std::complex<float> *c, size_t ldc);
+	const float &beta, std::complex<float> *c, size_t ldc);
 void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 	const std::complex<double> &alpha, const std::complex<double> *a, size_t lda,
 	const std::complex<double> *b, size_t ldb,
-	const std::complex<double> &beta, std::complex<double> *c, size_t ldc);
+	const double &beta, std::complex<double> *c, size_t ldc);
 
 ///////////////////////////////////////////////////////////////////////
 // MultTrM
