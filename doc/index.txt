@@ -10,3 +10,4 @@ RNP
 * [LA::QL](QL.html)
 * [LA::RQ](RQ.html)
 * [Random](Random.html)
+* [Tridiagonal](Tridiagonal.html)

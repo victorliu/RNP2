@@ -1,0 +1,686 @@
+<html>
+<head>
+<title>RNP::LA::Tridiagonal</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#RNP::LA::Tridiagonal">RNP::LA::Tridiagonal</a>
+ <ul class="tocsub">
+  <li><a href="#Tuning">Tuning</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#NormSym">NormSym</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::ReduceHerm_block">Util::ReduceHerm_block</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::SymmetricEigensystem2">Util::SymmetricEigensystem2</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::SymmetricQLIteration">Util::SymmetricQLIteration</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::SymmetricQRIteration">Util::SymmetricQRIteration</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::SymmetricEigensystem">Util::SymmetricEigensystem</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ReduceHerm_unblocked">ReduceHerm_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ReduceHerm">ReduceHerm</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateQHerm">GenerateQHerm</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultQHerm">MultQHerm</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#SymmetricEigensystem">SymmetricEigensystem</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::LA::Tridiagonal"></a>
+<h1>RNP::LA::Tridiagonal</h1>
+
+<p>Routines dealing with tridiagonal matrices and reduction of square
+matrices to tridiagonal form.</p>
+
+<hr />
+
+<a name="Tuning"></a>
+<h2>Tuning</h2>
+
+<p>Specialize this class to tune the block sizes. The optimal block
+size should be greater than or equal to the minimum block size.
+The value of the crossover determines when to enable blocking.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+struct Tuning
+</code></pre>
+
+<hr />
+
+<a name="NormSym"></a>
+<h2>NormSym</h2>
+
+<p>Returns the value of the 1-norm, Frobenius norm, infinity norm, or
+the  element of largest absolute value of a symmetric tridiagonal
+matrix A. Note that the maximum element magnitude is not a
+consistent matrix norm.
+Equivalent to Lapack routines _lanst.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>norm</dt>
+<dd> Specifies which norm to return:
+      If norm = &ldquo;M&rdquo;, returns max(abs(A[i,j])).
+      If norm = &ldquo;1&rdquo; or &ldquo;O&rdquo;, returns norm1(A) (max column sum).
+      If norm = &ldquo;I&rdquo;, returns normInf(A) (max row sum).
+      If norm = &ldquo;F&rdquo; or &ldquo;E&rdquo;, returns normFrob(A).</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix A.</dd>
+<dt>diag</dt>
+<dd> Pointer to the diagonal elements of A (length n).</dd>
+<dt>offdiag</dt>
+<dd> Pointer to the off-diagonal elements of A (length n-1).</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+typename Traits&lt;T&gt;::real_type NormSym(
+    const char *norm, size_t n, const T *diag, const T *offdiag
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::ReduceHerm_block"></a>
+<h2>Util::ReduceHerm_block</h2>
+
+<p>Reduces a set of rows and columns of a Hermitian matrix to
+tridiagonal form, and returns the block matrices needed to transform
+the remaining portion of the matrix. This is a utility routine
+equivalent to Lapack routines _latrd. No further explanation will
+be given.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ReduceHerm_block(
+    const char *uplo, size_t n, size_t nb, T *a, size_t lda,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *tau, // length n-1
+    T *w, size_t ldw
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::SymmetricEigensystem2"></a>
+<h2>Util::SymmetricEigensystem2</h2>
+
+<p>Computes the eigendecomposition of a 2-by-2 symmetric matrix:
+    [ a b ]
+    [ b c ]
+The eigen decomposition is given by:
+    [ cs1 sn1 ] [ a b ] [ cs1 -sn1 ] = [ rt1  0  ]
+    [-sn1 cs1 ] [ b c ] [ sn1  cs1 ]   [  0  rt2 ]
+where abs(rt1) > abs(rt2). Note that this routine only operates on
+real number types.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>a</dt>
+<dd> The [0,0] element of the matrix.</dd>
+<dt>b</dt>
+<dd> The [0,1] and [1,0] elements of the matrix.</dd>
+<dt>c</dt>
+<dd> The [1,1] elements of the matrix.</dd>
+<dt>rt1</dt>
+<dd> The returned eigenvalue of larger absolute value.</dd>
+<dt>rt2</dt>
+<dd> The returned eigenvalue of smaller absolute value.</dd>
+<dt>cs1</dt>
+<dd> The first element of the right eigenvector for rt1. If NULL,
+then the eigenvector is not returned (sn1 is not referenced).</dd>
+<dt>sn1</dt>
+<dd> The second element of the right eigenvector for rt1. If NULL,
+then the eigenvector is not returned (cs1 is not referenced).</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt; // T must be a real type
+void SymmetricEigensystem2(
+    const T &amp;a, const T &amp;b, const T &amp;c, T *rt1, T *rt2, T *cs1, T *sn1
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::SymmetricQLIteration"></a>
+<h2>Util::SymmetricQLIteration</h2>
+
+<p>Performs one pass of the QL iteration for a symmetric tridiagonal
+matrix. This is one part of the original Lapack routine _steqr. No
+further explanation will be given.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void SymmetricQLIteration(
+    size_t n, size_t m, size_t *pl, size_t lend, size_t *jtot, size_t nmaxit,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *z, size_t ldz,
+    typename Traits&lt;T&gt;::real_type *cv,
+    typename Traits&lt;T&gt;::real_type *sv
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::SymmetricQRIteration"></a>
+<h2>Util::SymmetricQRIteration</h2>
+
+<p>Performs one pass of the QR iteration for a symmetric tridiagonal
+matrix. This is one part of the original Lapack routine _steqr. No
+further explanation will be given.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void SymmetricQRIteration(
+    size_t n, size_t m, size_t *pl, size_t lend, size_t *jtot, size_t nmaxit,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *z, size_t ldz,
+    typename Traits&lt;T&gt;::real_type *cv,
+    typename Traits&lt;T&gt;::real_type *sv
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::SymmetricEigensystem"></a>
+<h2>Util::SymmetricEigensystem</h2>
+
+<p>Computes all eigenvvalues and, optionally, eigenvectors of a
+symmetric tridiagonal matrix using the implicit QL or QR method.
+If a matrix was reduced to tridiagonal form, the eigenvectors are
+recovered by supplying the unitary reducing matrix in Z, and the
+diagonalizing transformations are applied to Z, which will transform
+its columns into the eigenvectors. The diagonalizing transform is</p>
+
+<pre><code>T = Z^H * D * Z
+</code></pre>
+
+<p>where T is the given tridiagonal matrix, D is the diagonal matrix of
+eigenvalues returned in diag, and Z is the matrix of eigenvectors.
+The eigenvectors of T can be found by initializing Z to the
+identity matrix.</p>
+
+<p>This is equivalent to Lapack routine _steqr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> The number of rows and columns of the matrix.</dd>
+<dt>diag</dt>
+<dd> Pointer to the diagonal elements of A (length n). On exit,
+    overwritten by the eigenvalues.</dd>
+<dt>offdiag</dt>
+<dd> Pointer to the off-diagonal elements of A (length n-1). On
+    exit, the contents are destroyed.</dd>
+<dt>z</dt>
+<dd> Pointer to the first element of the matrix Z. On entry,
+    Z should be a unitary matrix to which the diagonalizing
+    transformations are applied; this can be the identity matrix
+    if the eigenvectors of T are desired, or some other matrix
+    used to reduce a Hermitian matrix to tridiagonal form if the
+    eigenvectors of the original matrix are desired. If NULL,
+    the eigenvectors are not computed.</dd>
+<dt>ldz</dt>
+<dd> The leading dimension of the array containing Z, ldz >= n.</dd>
+<dt>work</dt>
+<dd> Workspace of length 2*(n-1). Not referenced if z = NULL</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+int SymmetricEigensystem(
+    size_t n,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *z, size_t ldz,
+    typename Traits&lt;T&gt;::real_type *work
+)
+</code></pre>
+
+<hr />
+
+<a name="ReduceHerm_unblocked"></a>
+<h2>ReduceHerm_unblocked</h2>
+
+<p>Reduces a Hermitian matrix A into real symmetric tridiagonal matrix
+T by unitary similarity transformation:</p>
+
+<pre><code>Q^H * A * Q = T
+</code></pre>
+
+<p>If uplo = &ldquo;U&rdquo;, the matrix Q is represented as a product of elementary
+reflectors Q = H[n-2] &hellip; H[1] H[0]. Each H[i] has the form</p>
+
+<p>   H[i] = I - tau * v * v<sup>H</sup></p>
+
+<p>where tau is a scalar, and v is a vector with v[i+1..n] = 0 and
+v[i] = 1; v[0..i] is stored on exit in A[0..i,i+1], and tau in
+tau[i].
+If uplo = &ldquo;L&rdquo;, the matrix Q is represented as a product of elementary
+reflectors Q = H[0] H[1] &hellip; H[n-2]. Each H[i] has the form</p>
+
+<p>   H(i) = I - tau * v * v<sup>H</sup></p>
+
+<p>where tau is a scalar, and v is a vector with v[0..i+1] = 0 and
+v[i+1] = 1; v[i+2..n] is stored on exit in A[i+2..n,i], and tau
+in tau[i].</p>
+
+<p>The contents of A on exit are illustrated by the following examples
+with n = 5:</p>
+
+<pre><code>       uplo = "U"                           uplo = "L"
+[  d   e   v1  v2  v3 ]              [  d                  ]
+[      d   e   v2  v3 ]              [  e   d              ]
+[          d   e   v3 ]              [  v0  e   d          ]
+[              d   e  ]              [  v0  v1  e   d      ]
+[                  d  ]              [  v0  v1  v2  e   d  ]
+</code></pre>
+
+<p>where d and e denote diagonal and off-diagonal elements of T, and vi
+denotes an element of the vector defining H[i].
+This routine uses only level 2 BLAS.
+This is equivalent to Lapack routine <em>hetd2 and </em>sytd2.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+    If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> The number of rows and columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. If uplo = &ldquo;U&rdquo;, the upper
+    triangular part of A is assumed to be provided, and the
+    lower triangle is not touched. Similarly for uplo = &ldquo;L&rdquo;.
+    On exit, the diagonal and off-diagonal are overwritten by
+    corresponding elements of the tridiagonal matrix T. The
+    elements other than the diagonal and offdiagonal are
+    overwritten by the vectors of the elementary reflectors.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>diag</dt>
+<dd> Pointer to the diagonal elements of A (length n). On exit,
+    overwritten by the eigenvalues.</dd>
+<dt>offdiag</dt>
+<dd> Pointer to the off-diagonal elements of A (length n-1). On
+    exit, the contents are destroyed.</dd>
+<dt>tau</dt>
+<dd> The scale factors of the elementary reflectors (length n-1).</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ReduceHerm_unblocked(
+    const char *uplo, size_t n, T *a, size_t lda,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *tau
+)
+</code></pre>
+
+<hr />
+
+<a name="ReduceHerm"></a>
+<h2>ReduceHerm</h2>
+
+<p>Reduces a Hermitian matrix A into real symmetric tridiagonal matrix
+T by unitary similarity transformation:</p>
+
+<pre><code>Q^H * A * Q = T
+</code></pre>
+
+<p>If uplo = &ldquo;U&rdquo;, the matrix Q is represented as a product of elementary
+reflectors Q = H[n-2] &hellip; H[1] H[0]. Each H[i] has the form</p>
+
+<p>   H[i] = I - tau * v * v<sup>H</sup></p>
+
+<p>where tau is a scalar, and v is a vector with v[i+1..n] = 0 and
+v[i] = 1; v[0..i] is stored on exit in A[0..i,i+1], and tau in
+tau[i].
+If uplo = &ldquo;L&rdquo;, the matrix Q is represented as a product of elementary
+reflectors Q = H[0] H[1] &hellip; H[n-2]. Each H[i] has the form</p>
+
+<p>   H(i) = I - tau * v * v<sup>H</sup></p>
+
+<p>where tau is a scalar, and v is a vector with v[0..i+1] = 0 and
+v[i+1] = 1; v[i+2..n] is stored on exit in A[i+2..n,i], and tau
+in tau[i].</p>
+
+<p>The contents of A on exit are illustrated by the following examples
+with n = 5:</p>
+
+<pre><code>       uplo = "U"                           uplo = "L"
+[  d   e   v1  v2  v3 ]              [  d                  ]
+[      d   e   v2  v3 ]              [  e   d              ]
+[          d   e   v3 ]              [  v0  e   d          ]
+[              d   e  ]              [  v0  v1  e   d      ]
+[                  d  ]              [  v0  v1  v2  e   d  ]
+</code></pre>
+
+<p>where d and e denote diagonal and off-diagonal elements of T, and vi
+denotes an element of the vector defining H[i].</p>
+
+<p>This is equivalent to Lapack routine <em>hetrd and </em>sytrd.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+    If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> The number of rows and columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. If uplo = &ldquo;U&rdquo;, the upper
+    triangular part of A is assumed to be provided, and the
+    lower triangle is not touched. Similarly for uplo = &ldquo;L&rdquo;.
+    On exit, the diagonal and off-diagonal are overwritten by
+    corresponding elements of the tridiagonal matrix T. The
+    elements other than the diagonal and offdiagonal are
+    overwritten by the vectors of the elementary reflectors.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>diag</dt>
+<dd> Pointer to the diagonal elements of A (length n). On exit,
+    overwritten by the eigenvalues.</dd>
+<dt>offdiag</dt>
+<dd> Pointer to the off-diagonal elements of A (length n-1). On
+    exit, the contents are destroyed.</dd>
+<dt>tau</dt>
+<dd> The scale factors of the elementary reflectors (length n-1).</dd>
+<dt>lwork</dt>
+<dd> Length of workspace. If <em>lwork == 0 then the optimal size
+    is returned in this argument. If both </em>lwork == 0 and
+    NULL == work, then ReduceHerm_unblocked is called.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork, or NULL.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ReduceHerm(
+    const char *uplo, size_t n, T *a, size_t lda,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *tau, size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="GenerateQHerm"></a>
+<h2>GenerateQHerm</h2>
+
+<p>Generates a complex unitary matrix Q which is defined as the
+product of n-1 elementary reflectors of order n, as returned by
+ReduceHerm. The resulting Q is such that</p>
+
+<pre><code>Q^H * A * Q = T
+</code></pre>
+
+<p>This routine is equivalent to Lapack <em>ungtr and </em>orgtr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A contains the reflectors.
+  If &ldquo;L&rdquo;, the lower triangle of A contains the reflectors.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of Q.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix returned by
+  ReduceHerm which contains the vectors defining the elementary
+  reflectors.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Length n-1 array of elementary reflector scale factors
+  returned by ReduceHerm.</dd>
+<dt>lwork</dt>
+<dd> Length of workspace (>= n-1). If *lwork == 0 then the optimal
+  size is returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork, or NULL for workspace query.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void GenerateQHerm(
+    const char *uplo, size_t n, T *a, size_t lda,
+    const T *tau, // length n-1
+    size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="MultQHerm"></a>
+<h2>MultQHerm</h2>
+
+<p>Overwrites a general m-by-n matrix C with</p>
+
+<table>
+<thead>
+<tr>
+<th>trans </th>
+<th> side = &ldquo;L&rdquo;   </th>
+<th> side = &ldquo;R&rdquo;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&ldquo;N&rdquo;  </td>
+<td>   Q   * C    </td>
+<td>  C * Q</td>
+</tr>
+<tr>
+<td>&ldquo;C&rdquo;  </td>
+<td>   Q<sup>H</sup> * C    </td>
+<td>  C * Q<sup>H</sup></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>where Q is the unitary matrix obtained from ReduceHerm which
+performed:</p>
+
+<pre><code>Q^H * A * Q = T
+</code></pre>
+
+<p>This routine is equivalent to Lapack <em>unmtr and </em>ormtr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, apply Q or Q<sup>H</sup> from the left. If &ldquo;R&rdquo;, apply Q or
+  Q<sup>H</sup> from the right.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A contains the reflectors.
+  If &ldquo;L&rdquo;, the lower triangle of A contains the reflectors.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, apply Q. If &ldquo;C&rdquo;, apply Q<sup>H</sup>.</dd>
+<dt>m</dt>
+<dd> Number of rows of C.</dd>
+<dt>n</dt>
+<dd> Number of columns of C.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of the matrix returned by
+  ReduceHerm which contains the vectors defining the elementary
+  reflectors.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A. If side = &ldquo;L&rdquo;,
+  lda >= m. If side = &ldquo;R&rdquo;, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Array of elementary reflector scale factors returned by
+  ReduceHerm. If side = &ldquo;L&rdquo;, length m-1. If side = &ldquo;R&rdquo;, length
+  n-1.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C.</dd>
+<dt>lwork</dt>
+<dd> Length of workspace; if side = &ldquo;L&rdquo;, must be at least n, and
+  if side = &ldquo;R&rdquo;, must be at least m. If *lwork == 0 then the
+  optimal size is returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork, or NULL for workspace query.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void MultQHerm(
+    const char *side, const char *uplo, const char *trans,
+    size_t m, size_t n, const T *a, size_t lda, const T *tau, // length n-1
+    T *c, size_t ldc, size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="SymmetricEigensystem"></a>
+<h2>SymmetricEigensystem</h2>
+
+<p>Computes all eigenvvalues and, optionally, eigenvectors of a
+symmetric tridiagonal matrix using the implicit QL or QR method.
+The diagonalizing transform is</p>
+
+<pre><code>T = Z^H * D * Z
+</code></pre>
+
+<p>where T is the given tridiagonal matrix, D is the diagonal matrix of
+eigenvalues returned in diag, and Z is the matrix of eigenvectors.</p>
+
+<p>This is equivalent to Lapack routine _stev.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> The number of rows and columns of the matrix.</dd>
+<dt>diag</dt>
+<dd> Pointer to the diagonal elements of A (length n). On exit,
+    overwritten by the eigenvalues.</dd>
+<dt>offdiag</dt>
+<dd> Pointer to the off-diagonal elements of A (length n-1). On
+    exit, the contents are destroyed.</dd>
+<dt>z</dt>
+<dd> Pointer to the first element of the matrix Z, in which the
+    eigenvectors are returned. If NULL, the eigenvectors are
+    not computed.</dd>
+<dt>ldz</dt>
+<dd> The leading dimension of the array containing Z, ldz >= n.</dd>
+<dt>work</dt>
+<dd> Workspace of length 2*(n-1). Not referenced if z = NULL</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+int SymmetricEigensystem(
+    size_t n,
+    typename Traits&lt;T&gt;::real_type *diag,
+    typename Traits&lt;T&gt;::real_type *offdiag,
+    T *z, size_t ldz,
+    typename Traits&lt;T&gt;::real_type *work
+)
+</code></pre>
+</body>
+</html>

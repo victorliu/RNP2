@@ -3,6 +3,7 @@ DEBUGLIB = /usr/lib/libduma.a -lpthread -llapack
 LIBS = -lblas $(DEBUGLIB)
 
 TESTS = \
+	test_tridiag_herm_reduce \
 	test_symtridiag_qr \
 	test_rq_tall \
 	test_rq_fat \
@@ -40,6 +41,8 @@ test_rq_fat: test_rq_fat.cpp
 	g++ $(CFLAGS) test_rq_fat.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -llapack -o $@
 test_symtridiag_qr: test_symtridiag_qr.cpp
 	g++ $(CFLAGS) test_symtridiag_qr.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
+test_tridiag_herm_reduce: test_tridiag_herm_reduce.cpp
+	g++ $(CFLAGS) test_tridiag_herm_reduce.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 #test_lu_obj: test_lu_obj.cpp
 #	g++ $(CFLAGS) test_lu_obj.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
 #test_qr_load: test_qr_load.cpp

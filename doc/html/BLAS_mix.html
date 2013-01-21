@@ -3363,11 +3363,11 @@ void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
 void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
     const std::complex&lt;float&gt; &amp;alpha, const std::complex&lt;float&gt; *a, size_t lda,
     const std::complex&lt;float&gt; *b, size_t ldb,
-    const std::complex&lt;float&gt; &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
+    const float &amp;beta, std::complex&lt;float&gt; *c, size_t ldc);
 void HermRank2KUpdate(const char *uplo, const char *trans, size_t n, size_t k,
     const std::complex&lt;double&gt; &amp;alpha, const std::complex&lt;double&gt; *a, size_t lda,
     const std::complex&lt;double&gt; *b, size_t ldb,
-    const std::complex&lt;double&gt; &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
+    const double &amp;beta, std::complex&lt;double&gt; *c, size_t ldc);
 </code></pre>
 
 <hr />
