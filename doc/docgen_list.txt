@@ -8,3 +8,4 @@ RNP/bits/LQ.hpp
 RNP/bits/QL.hpp
 RNP/bits/RQ.hpp
 RNP/bits/Tridiagonal.hpp
+RNP/bits/Eigensystems.hpp

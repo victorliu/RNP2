@@ -45,7 +45,8 @@ void test_hetrd(const char *uplo, size_t n){
 	{ // Perform reduction
 		RNP::BLAS::Copy(n, n, A, n, Ared, n);
 		size_t lwork = 0;
-		RNP::LA::Tridiagonal::ReduceHerm(uplo, n, Ared, n, diag, offdiag, tau, &lwork, work);
+		T dummy;
+		RNP::LA::Tridiagonal::ReduceHerm(uplo, n, Ared, n, diag, offdiag, tau, &lwork, &dummy);
 		work = new T[lwork];
 		RNP::LA::Tridiagonal::ReduceHerm(uplo, n, Ared, n, diag, offdiag, tau, &lwork, work);
 		//RNP::LA::Tridiagonal::ReduceHerm_unblocked(uplo, n, Ared, n, diag, offdiag, tau);

@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>Eigensystems</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#Eigensystems">Eigensystems</a>
+ <ul class="tocsub">
+  <li><a href="#HermitianEigensystem">HermitianEigensystem</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="Eigensystems"></a>
+<h1>Eigensystems</h1>
+
+<p>Computes various eigenvalue decompositions, which are basically
+similarity transformations which bring a square matrix to diagonal
+form.</p>
+
+<hr />
+
+<a name="HermitianEigensystem"></a>
+<h2>HermitianEigensystem</h2>
+
+<p>Computes all eigenvalues and, optionally, eigenvectors of a
+Hermitian matrix A. This routine works for complex Hermitian or real
+symmetric matrices. The right eigenvectors are returned as columns
+of the same matrix A.</p>
+
+<p>Equivalent to Lapack routines zheev/cheev and dsyev/ssyev.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>job</dt>
+<dd> If &ldquo;N&rdquo;, only eigenvalues are computed. If &ldquo;V&rdquo; the
+  eigenvectors are returned in the columns of a.</dd>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+  If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. On exit, if job = &ldquo;V&rdquo;,
+  this is overwritten by the matrix whose columns are the
+  eigenvectors corresponding to the eigenvalues in w.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= n).</dd>
+<dt>w</dt>
+<dd> Array of returned eigenvalues (length n).</dd>
+<dt>lwork</dt>
+<dd> Length of workspace. If <em>lwork == 0 then the optimal size
+  is returned in this argument. lwork must be at least 2</em>(n-1)
+  for complex matrices, and 3*(n-1) for real matrices.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork, or NULL for workspace query.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+int HermitianEigensystem(
+    const char *job, const char *uplo, size_t n, T *a, size_t lda,
+    typename Traits&lt;T&gt;::real_type *w,
+    size_t *lwork,
+    T *work
+)
+</code></pre>
+</body>
+</html>

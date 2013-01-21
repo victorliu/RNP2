@@ -17,5 +17,6 @@
 
 #include "bits/MatrixNormEstimates.hpp"
 #include "bits/Tridiagonal.hpp"
+#include "bits/Eigensystems.hpp"
 
 #endif // RNP_LA_HPP_INCLUDED

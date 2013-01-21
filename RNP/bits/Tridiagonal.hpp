@@ -372,13 +372,13 @@ void SymmetricQLIteration(
 			m = lend;
 		}
 		if(m < lend){
-			offdiag[m] = T(0);
+			offdiag[m] = real_type(0);
 		}
-		T p = diag[l];
+		real_type p = diag[l];
 		if(m != l){
 			// If remaining matrix is 2-by-2, special case it
 			if(m == l+1){
-				T rt1, rt2;
+				real_type rt1, rt2;
 				if(NULL != z){
 					LA::Tridiagonal::Util::SymmetricEigensystem2(
 						diag[l], offdiag[l], diag[l+1], &rt1, &rt2, &cv[l], &sv[l]
@@ -388,12 +388,12 @@ void SymmetricQLIteration(
 					);
 				}else{
 					LA::Tridiagonal::Util::SymmetricEigensystem2(
-						diag[l], offdiag[l], diag[l+1], &rt1, &rt2, (T*)NULL, (T*)NULL
+						diag[l], offdiag[l], diag[l+1], &rt1, &rt2, (real_type*)NULL, (real_type*)NULL
 					);
 				}
 				diag[l] = rt1;
 				diag[l+1] = rt2;
-				offdiag[l] = T(0);
+				offdiag[l] = real_type(0);
 				l += 2;
 				if(l <= lend){
 					continue;
@@ -407,22 +407,22 @@ void SymmetricQLIteration(
 			++(*jtot);
 			// Form shift.
 
-			T g = (diag[l+1]-p) / (T(2)*offdiag[l]);
-			T r = Traits<T>::hypot2(g, T(1));
+			real_type g = (diag[l+1]-p) / (real_type(2)*offdiag[l]);
+			real_type r = Traits<real_type>::hypot2(g, real_type(1));
 			g = diag[m] - p + (offdiag[l] / (g+(g > 0 ? r : -r)));
 			{
-				T s = 1.;
-				T c = 1.;
-				p = 0.;
+				real_type s(1);
+				real_type c(1);
+				p = real_type(0);
 
 				// Inner loop
 				for(size_t i = m-1; i+1 >= l+1; --i){ // +1's needed here
-					T f = s*offdiag[i];
-					T b = c*offdiag[i];
+					real_type f = s*offdiag[i];
+					real_type b = c*offdiag[i];
 					LA::Rotation::Generate(g, f, &c, &s, &r);
 					if(i+1 != m){ offdiag[i+1] = r; }
 					g = diag[i+1] - p;
-					r = (diag[i]-g)*s + T(2)*c*b;
+					r = (diag[i]-g)*s + real_type(2)*c*b;
 					p = s*r;
 					diag[i+1] = g + p;
 					g = c*r - b;
@@ -490,13 +490,13 @@ void SymmetricQRIteration(
 		}
 
 		if(m > lend){
-			offdiag[m-1] = 0.;
+			offdiag[m-1] = real_type(0);
 		}
-		T p = diag[l];
+		real_type p = diag[l];
 		if(m != l){	
 			// If remaining matrix is 2-by-2, special case it
 			if(m+1 == l){
-				T rt1, rt2;
+				real_type rt1, rt2;
 				if(NULL != z){
 					LA::Tridiagonal::Util::SymmetricEigensystem2(
 						diag[l-1], offdiag[l-1], diag[l], &rt1, &rt2, &cv[m], &sv[m]
@@ -506,12 +506,12 @@ void SymmetricQRIteration(
 					);
 				}else{
 					LA::Tridiagonal::Util::SymmetricEigensystem2(
-						diag[l-1], offdiag[l-1], diag[l], &rt1, &rt2, (T*)NULL, (T*)NULL
+						diag[l-1], offdiag[l-1], diag[l], &rt1, &rt2, (real_type*)NULL, (real_type*)NULL
 					);
 				}
 				diag[l-1] = rt1;
 				diag[l] = rt2;
-				offdiag[l-1] = T(0);
+				offdiag[l-1] = real_type(0);
 				l -= 2;
 				if((l+1) >= (lend+1)){
 					continue;
@@ -524,22 +524,22 @@ void SymmetricQRIteration(
 			}
 			++(*jtot);
 			// Form shift.
-			T g = (diag[l-1]-p) / (T(2)*offdiag[l-1]);
-			T r = Traits<T>::hypot2(g, T(1));
+			real_type g = (diag[l-1]-p) / (real_type(2)*offdiag[l-1]);
+			real_type r = Traits<real_type>::hypot2(g, real_type(1));
 			g = diag[m] - p + (offdiag[l-1] / (g+(g > 0 ? r : -r)));
 			{
-				T s = 1.;
-				T c = 1.;
-				p = 0.;
+				real_type s(1);
+				real_type c(1);
+				p = real_type(0);
 
 				// Inner loop
 				for(size_t i = m; i < l; ++i){
-					T f = s*offdiag[i];
-					T b = c*offdiag[i];
+					real_type f = s*offdiag[i];
+					real_type b = c*offdiag[i];
 					LA::Rotation::Generate(g, f, &c, &s, &r);
 					if(i != m){ offdiag[i-1] = r; }
 					g = diag[i] - p;
-					r = (diag[i+1]-g)*s + T(2)*c*b;
+					r = (diag[i+1]-g)*s + real_type(2)*c*b;
 					p = s*r;
 					diag[i] = g + p;
 					g = c*r - b;
@@ -645,7 +645,7 @@ int SymmetricEigensystem(
 	do{
 		if(l1+1 > n){ return 0; }
 		if(l1+1 > 1){
-			offdiag[l1-1] = T(0);
+			offdiag[l1-1] = real_type(0);
 		}
 		{
 			bool found_small = false;
@@ -661,7 +661,7 @@ int SymmetricEigensystem(
 							sqrt(Traits<T>::abs(diag[m])) * sqrt(Traits<T>::abs(diag[m+1]))
 						)
 					){
-						offdiag[m] = T(0);
+						offdiag[m] = real_type(0);
 						found_small = true;
 						break;
 					}
@@ -852,6 +852,7 @@ void ReduceHerm_unblocked(
 			diag[i] = Traits<T>::real(a[i+i*lda]);
 			tau[i] = taui;
 		}
+		diag[n-1] = Traits<T>::real(a[n-1+(n-1)*lda]);
 	}
 }
 
@@ -933,7 +934,7 @@ void ReduceHerm(
 	if(0 == n){ return; }
 	
 	size_t nb = Tuning<T>::reduce_herm_block_size_opt(uplo, n);
-	if(0 == *lwork && NULL == work){
+	if(0 == *lwork && NULL != work){
 		*lwork = n*nb;
 		return;
 	}
@@ -974,7 +975,7 @@ void ReduceHerm(
 				uplo, "N", i, nb, T(-1), &a[0+i*lda], lda,
 				work, ldwork, real_type(1), a, lda
 			);
-			for(size_t j = i; j+1 < i+nb; ++j){
+			for(size_t j = i; j < i+nb; ++j){
 				a[j-1+j*lda] = offdiag[j-1];
 				diag[j] = Traits<T>::real(a[j+j*lda]);
 			}
@@ -994,7 +995,7 @@ void ReduceHerm(
 				uplo, "N", n-i-nb, nb, T(-1), &a[i+nb+i*lda], lda,
 				&work[nb], ldwork, real_type(1), &a[i+nb+(i+nb)*lda], lda
 			);
-			for(size_t j = 0; j+1 < i+nb; ++j){
+			for(size_t j = 0; j < i+nb; ++j){
 				a[j+1+j*lda] = offdiag[j];
 				diag[j] = Traits<T>::real(a[j+j*lda]);
 			}
