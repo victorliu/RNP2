@@ -222,7 +222,7 @@ void Factor(
 // Arguments
 // side  If "L", apply Q or Q^H from the left. If "R", apply Q or
 //       Q^H from the right.
-// trans If "N", apply Q. If "C", apply Q'.
+// trans If "N", apply Q. If "C", apply Q^H.
 // m     Number of rows of the matrix C.
 // n     Number of columns of the matrix C.
 // k     Number of elementary reflectors to apply.
@@ -313,7 +313,7 @@ void MultQ_unblocked(
 // Arguments
 // side  If "L", apply Q or Q^H from the left. If "R", apply Q or
 //       Q^H from the right.
-// trans If "N", apply Q. If "C", apply Q'.
+// trans If "N", apply Q. If "C", apply Q^H.
 // m     Number of rows of the matrix C.
 // n     Number of columns of the matrix C.
 // k     Number of elementary reflectors to apply.
