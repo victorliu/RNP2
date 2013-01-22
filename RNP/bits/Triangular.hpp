@@ -872,6 +872,251 @@ void Solve(
     }
 }
 
+
+///////////////////////////////////////////////////////////////////////
+// Eigenvectors
+// ------------
+// Computes some or all of the right and/or left eigenvectors of an
+// upper triangular matrix T.
+// Matrices of this type are produced by the Schur factorization of
+// a complex general matrix: A = Q*T*Q^H.
+// 
+// The right eigenvector x and the left eigenvector y of T corresponding
+// to an eigenvalue w are defined by:
+// 
+//     T*x = w*x,     (y^H)*T = w*(y^H)
+// 
+// where y^H denotes the conjugate transpose of the vector y.
+// The eigenvalues are not input to this routine, but are read directly
+// from the diagonal of T.
+// 
+// This routine returns the matrices X and/or Y of right and left
+// eigenvectors of T, or the products Q*X and/or Q*Y, where Q is an
+// input matrix.  If Q is the unitary factor that reduces a matrix A to
+// Schur form T, then Q*X and Q*Y are the matrices of right and left
+// eigenvectors of A.
+//
+// ### Details
+//
+// The algorithm used in this program is basically backward (forward)
+// substitution, with scaling to make the the code robust against
+// possible overflow.
+//
+// Each eigenvector is normalized so that the element of largest
+// magnitude has magnitude 1; here the magnitude of a complex number
+// (x,y) is taken to be |x| + |y|.
+//
+// ### Authors
+//
+// * Univ. of Tennessee
+// * Univ. of California Berkeley
+// * Univ. of Colorado Denver
+// * NAG Ltd.
+//
+// Arguments
+// howmny If "A", compute all right and/or left eigenvectors.
+//        If "B", compute all right and/or left eigenvectors,
+//        backtransformed using the matrices supplied in vr and/or vl.
+//        If "S", compute selected right and/or left eigenvectors,
+//        as indicated by the array select.
+// select Length n array. If howmny = "S", then if select[j] is non-
+//        zero, the eigenvector corresponding to the j-th eigenvalue
+//        computed. Not referenced otherwise.
+// n      Number of rows and columns of T.
+// t      Pointer to the first element of T.
+// ldt    Leading dimension of the array containing T, ldt >= n.
+// vl     Pointer to the first element of the matrix of left
+//        eigenvectorts. If NULL, the left eigenvectors are not
+//        computed. If howmny = "S", then each eigenvector is stored
+//        consecutively on the columns in the same order as the
+//        eigenvalues, and the required columns are referenced.
+//        Otherwise, all eigenvectors are computed, requiring n
+//        columns. If howmny = "B", then on entry, vl should contain
+//        an n-by-n matrix Q.
+// ldvl   Leading dimension of the array containing vl, ldvl >= n.
+// vr     Pointer to the first element of the matrix of right
+//        eigenvectorts. If NULL, the right eigenvectors are not
+//        computed. If howmny = "S", then each eigenvector is stored
+//        consecutively on the columns in the same order as the
+//        eigenvalues, and the required columns are referenced.
+//        Otherwise, all eigenvectors are computed, requiring n
+//        columns. If howmny = "B", then on entry, vr should contain
+//        an n-by-n matrix Q.
+// ldvr   Leading dimension of the array containing vr, ldvr >= n.
+// work   Workspace of size 2*n.
+// rwork  Workspace of size n.
+//
+template <typename T>
+void Eigenvectors(
+	const char *howmny, const int *select,
+	size_t n, T *t, size_t ldt, T *vl, size_t ldvl, T *vr, size_t ldvr,
+	T *work, typename Traits<T>::real_type *rwork
+){
+	typedef typename Traits<T>::real_type real_type;
+
+	RNPAssert('A' == howmny[0] || 'B' == howmny[0] || 'S' == howmny[0]);
+	RNPAssert(ldt >= n);
+	RNPAssert(NULL == vl || ldvl >= n);
+	RNPAssert(NULL == vr || ldvr >= n);
+	
+	const bool over  = ('B' == howmny[0]);
+	const bool somev = ('S' == howmny[0]);
+
+	// Set m to the number of columns required to store the selected
+	// eigenvectors.
+	size_t m = n;
+	if(somev){
+		m = 0;
+		for(size_t j = 0; j < n; ++j){
+			if(select[j]){
+				++m;
+			}
+		}
+	}
+
+	if(0 == n){ return; }
+
+	// Set the constants to control overflow.
+	static const real_type unfl(Traits<real_type>::min()); // take sqrt on Cray
+	static const real_type ulp(real_type(2) * Traits<real_type>::eps());
+	static const real_type smlnum(unfl * (real_type(n) / ulp));
+
+	// Store the diagonal elements of T in working array WORK.
+	for(size_t i = 0; i < n; ++i){
+		work[n+i] = t[i+i*ldt];
+	}
+
+	// Compute 1-norm of each column of strictly upper triangular
+	// part of T to control overflow in triangular solver.
+	rwork[0] = real_type(0);
+	for(size_t j = 1; j < n; ++j){
+		rwork[j] = BLAS::Asum(j, &t[0+j*ldt], 1);
+	}
+
+	if(NULL != vr){ // Compute right eigenvectors.
+		size_t is = m-1;
+		size_t ki = n; while(ki --> 0){
+			if(somev && !select[ki]){ continue; }
+			real_type smin = ulp * (Traits<T>::norm1(t[ki+ki*ldt]));
+			if(smlnum > smin){ smin = smlnum; }
+
+			work[0] = T(1);
+
+			// Form right-hand side.
+			for(size_t k = 0; k < ki; ++k){
+				work[k] = -t[k+ki*ldt];
+			}
+
+			// Solve the triangular system:
+			// (T(1:KI-1,1:KI-1) - T(KI,KI))*X = SCALE*WORK.
+			for(size_t k = 0; k < ki; ++k){
+				t[k + k * ldt] -= t[ki + ki * ldt];
+				if(Traits<T>::norm1(t[k + k * ldt]) < smin){
+					t[k+k*ldt] = smin;
+				}
+			}
+
+			real_type scale(1);
+			if(ki+1 > 1){
+				Triangular::Solve(
+					"U", "N", "N", "Y", ki+1 - 1, t, ldt,
+					work, &scale, rwork
+				);
+				work[ki] = scale;
+			}
+
+			// Copy the vector x or Q*x to VR and normalize.
+
+			if(!over){
+				BLAS::Copy(ki+1, work, 1, &vr[0+is*ldvr], 1);
+
+				const size_t ii = BLAS::MaximumIndex(ki+1, &vr[0+is*ldvr], 1);
+				const real_type remax(real_type(1) / Traits<T>::norm1(vr[ii+is*ldvr]));
+				BLAS::Scale(ki+1, remax, &vr[0+is*ldvr], 1);
+
+				for(size_t k = ki+1; k < n; ++k){
+					vr[k+is*ldvr] = T(0);
+				}
+			}else{
+				if(ki+1 > 1){
+					BLAS::MultMV("N", n, ki+1 - 1, T(1), vr, ldvr, work, 1, scale, &vr[0+ki*ldvr], 1);
+				}
+				const size_t ii = BLAS::MaximumIndex(n, &vr[0+ki*ldvr], 1);
+				const real_type remax(real_type(1) / Traits<T>::norm1(vr[ii+ki*ldvr]));
+				BLAS::Scale(n, remax, &vr[0+ki*ldvr], 1);
+			}
+
+			// Set back the original diagonal elements of T.
+			for(size_t k = 0; k < ki; ++k){
+				t[k+k*ldt] = work[k+n];
+			}
+			--is;
+		}
+	}
+
+	if(NULL != vl){ // Compute left eigenvectors.
+		size_t is = 0;
+		for(size_t ki = 0; ki < n; ++ki){
+			if(somev && !select[ki]){ continue; }
+			real_type smin = ulp * Traits<T>::norm1(t[ki + ki * ldt]);
+			if(smlnum > smin){ smin = smlnum; }
+			work[n-1] = T(1);
+
+			// Form right-hand side.
+			for(size_t k = ki+1; k < n; ++k){
+				work[k] = -Traits<T>::conj(t[ki+k*ldt]);
+			}
+
+			// Solve the triangular system:
+			// (T(KI+1:N,KI+1:N) - T(KI,KI))**H * X = SCALE*WORK.
+
+			for(size_t k = ki+1; k < n; ++k){
+				t[k+k*ldt] -= t[ki+ki*ldt];
+				if(Traits<T>::norm1(t[k+k*ldt]) < smin){
+					t[k+k*ldt] = smin;
+				}
+			}
+
+			real_type scale(1);
+			if(ki+1 < n){
+				Triangular::Solve(
+					"U", "C", "N", "Y", n - ki-1, &t[ki + 1 + (ki + 1) * ldt], ldt,
+					&work[ki + 1], &scale, rwork
+				);
+				work[ki] = scale;
+			}
+
+			// Copy the vector x or Q*x to VL and normalize.
+			if(!over){
+				BLAS::Copy(n - ki, &work[ki], 1, &vl[ki+is*ldvl], 1);
+
+				const size_t ii = BLAS::MaximumIndex(n - ki, &vl[ki+is*ldvl], 1) + ki;
+				const real_type remax(real_type(1) / Traits<T>::norm1(vl[ii+is*ldvl]));
+				BLAS::Scale(n - ki, remax, &vl[ki+is*ldvl], 1);
+
+				for(size_t k = 0; k < ki; ++k){
+					vl[k+is*ldvl] = T(0);
+				}
+			}else{
+				if(ki+1 < n){
+					BLAS::MultMV("N", n, n - ki-1, T(1), &vl[0+(ki + 1) * ldvl], 
+						ldvl, &work[ki + 1], 1, scale, &vl[0+ki*ldvl], 1);
+				}
+				const size_t ii = BLAS::MaximumIndex(n, &vl[0+ki*ldvl], 1);
+				const real_type remax(real_type(1) / Traits<T>::norm1(vl[ii+ki*ldvl]));
+				BLAS::Scale(n, remax, &vl[0+ki*ldvl], 1);
+			}
+
+			// Set back the original diagonal elements of T.
+			for(size_t k = ki + 1; k < n; ++k){
+				t[k+k*ldt] = work[k+n];
+			}
+
+			++is;
+		}
+	}
+}
+
 } // namespace Triangular
 } // namespace LA
 } // namespace RNP

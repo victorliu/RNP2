@@ -15,6 +15,7 @@ TESTS = \
 	test_qr_tall \
 	test_qr_fat \
 	test_random \
+	test_trieigvec \
 	test_trisolve \
 	test_triangular \
 	test_lu
@@ -25,6 +26,8 @@ test_triangular: test_triangular.cpp
 	g++ -Wall test_triangular.cpp -I.. ../src/BLAS_mix.cpp $(LIBS) -o $@
 test_trisolve: test_trisolve.cpp
 	g++ -Wall test_trisolve.cpp -I.. ../src/BLAS_mix.cpp $(LIBS) -o $@
+test_trieigvec: test_trieigvec.cpp
+	g++ -Wall test_trieigvec.cpp -I.. ../src/BLAS_mix.cpp $(LIBS) -o $@
 test_lu: test_lu.cpp
 	g++ $(CFLAGS) test_lu.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 test_qr_fat: test_qr_fat.cpp

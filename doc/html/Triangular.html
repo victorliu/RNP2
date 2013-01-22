@@ -40,6 +40,14 @@
    <li><a href="#Prototype">Prototype</a></li>
   </ul>
   </li>
+  <li><a href="#Eigenvectors">Eigenvectors</a>
+  <ul class="tocsub">
+   <li><a href="#Details">Details</a></li>
+   <li><a href="#Authors">Authors</a></li>
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
  </ul>
  </li>
 </ul>
@@ -347,6 +355,113 @@ void Solve(
     size_t n, T *a, size_t lda, T *x,
     typename Traits&lt;T&gt;::real_type *scale,
     typename Traits&lt;T&gt;::real_type *cnorm
+)
+</code></pre>
+
+<hr />
+
+<a name="Eigenvectors"></a>
+<h2>Eigenvectors</h2>
+
+<p>Computes some or all of the right and/or left eigenvectors of an
+upper triangular matrix T.
+Matrices of this type are produced by the Schur factorization of
+a complex general matrix: A = Q<em>T</em>Q<sup>H</sup>.</p>
+
+<p>The right eigenvector x and the left eigenvector y of T corresponding
+to an eigenvalue w are defined by:</p>
+
+<pre><code>T*x = w*x,     (y^H)*T = w*(y^H)
+</code></pre>
+
+<p>where y<sup>H</sup> denotes the conjugate transpose of the vector y.
+The eigenvalues are not input to this routine, but are read directly
+from the diagonal of T.</p>
+
+<p>This routine returns the matrices X and/or Y of right and left
+eigenvectors of T, or the products Q<em>X and/or Q</em>Y, where Q is an
+input matrix.  If Q is the unitary factor that reduces a matrix A to
+Schur form T, then Q<em>X and Q</em>Y are the matrices of right and left
+eigenvectors of A.</p>
+
+<a name="Details"></a>
+<h3>Details</h3>
+
+<p>The algorithm used in this program is basically backward (forward)
+substitution, with scaling to make the the code robust against
+possible overflow.</p>
+
+<p>Each eigenvector is normalized so that the element of largest
+magnitude has magnitude 1; here the magnitude of a complex number
+(x,y) is taken to be |x| + |y|.</p>
+
+<a name="Authors"></a>
+<h3>Authors</h3>
+
+<ul>
+<li>Univ. of Tennessee</li>
+<li>Univ. of California Berkeley</li>
+<li>Univ. of Colorado Denver</li>
+<li>NAG Ltd.</li>
+</ul>
+
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>howmny</dt>
+<dd> If &ldquo;A&rdquo;, compute all right and/or left eigenvectors.
+   If &ldquo;B&rdquo;, compute all right and/or left eigenvectors,
+   backtransformed using the matrices supplied in vr and/or vl.
+   If &ldquo;S&rdquo;, compute selected right and/or left eigenvectors,
+   as indicated by the array select.</dd>
+<dt>select</dt>
+<dd> Length n array. If howmny = &ldquo;S&rdquo;, then if select[j] is non-
+   zero, the eigenvector corresponding to the j-th eigenvalue
+   computed. Not referenced otherwise.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of T.</dd>
+<dt>t</dt>
+<dd> Pointer to the first element of T.</dd>
+<dt>ldt</dt>
+<dd> Leading dimension of the array containing T, ldt >= n.</dd>
+<dt>vl</dt>
+<dd> Pointer to the first element of the matrix of left
+   eigenvectorts. If NULL, the left eigenvectors are not
+   computed. If howmny = &ldquo;S&rdquo;, then each eigenvector is stored
+   consecutively on the columns in the same order as the
+   eigenvalues, and the required columns are referenced.
+   Otherwise, all eigenvectors are computed, requiring n
+   columns. If howmny = &ldquo;B&rdquo;, then on entry, vl should contain
+   an n-by-n matrix Q.</dd>
+<dt>ldvl</dt>
+<dd> Leading dimension of the array containing vl, ldvl >= n.</dd>
+<dt>vr</dt>
+<dd> Pointer to the first element of the matrix of right
+   eigenvectorts. If NULL, the right eigenvectors are not
+   computed. If howmny = &ldquo;S&rdquo;, then each eigenvector is stored
+   consecutively on the columns in the same order as the
+   eigenvalues, and the required columns are referenced.
+   Otherwise, all eigenvectors are computed, requiring n
+   columns. If howmny = &ldquo;B&rdquo;, then on entry, vr should contain
+   an n-by-n matrix Q.</dd>
+<dt>ldvr</dt>
+<dd> Leading dimension of the array containing vr, ldvr >= n.</dd>
+<dt>work</dt>
+<dd> Workspace of size 2*n.</dd>
+<dt>rwork</dt>
+<dd> Workspace of size n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Eigenvectors(
+    const char *howmny, const int *select,
+    size_t n, T *t, size_t ldt, T *vl, size_t ldvl, T *vr, size_t ldvr,
+    T *work, typename Traits&lt;T&gt;::real_type *rwork
 )
 </code></pre>
 </body>
