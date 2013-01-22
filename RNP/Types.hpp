@@ -118,7 +118,7 @@ template<typename _Real> struct Traits<std::complex<_Real> >
 		return complex_type(re, usemyimag.imag());
 	}
 	
-	real_type zdiv_cr(
+	static real_type zdiv_cr(
 		real_type a, real_type b,
 		real_type c, real_type d,
 		real_type r, real_type t
@@ -146,10 +146,10 @@ template<typename _Real> struct Traits<std::complex<_Real> >
 		*q = zdiv_cr(b, a, c, d, r, t);
 	}
 	static inline complex_type div(const complex_type &num, const complex_type &den){
-		const real_type a = num.real();
-		const real_type b = num.imag();
-		const real_type c = den.real();
-		const real_type d = den.imag();
+		real_type a = num.real();
+		real_type b = num.imag();
+		real_type c = den.real();
+		real_type d = den.imag();
 		const real_type A = Traits<real_type>::abs(a);
 		const real_type B = Traits<real_type>::abs(b);
 		const real_type C = Traits<real_type>::abs(c);
