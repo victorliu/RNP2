@@ -32,6 +32,14 @@
    <li><a href="#Prototype">Prototype</a></li>
   </ul>
   </li>
+  <li><a href="#Solve">Solve</a>
+  <ul class="tocsub">
+   <li><a href="#Authors">Authors</a></li>
+   <li><a href="#Details">Details</a></li>
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
  </ul>
  </li>
 </ul>
@@ -170,6 +178,175 @@ void Copy(
     const char *uplo, const char *diag, size_t m, size_t n,
     const T* src, size_t ldsrc,
     T* dst, size_t lddst
+)
+</code></pre>
+
+<hr />
+
+<a name="Solve"></a>
+<h2>Solve</h2>
+
+<p>Solves a triangular system of equations with the scale factor set
+to prevent overflow. This routine solves one of the triangular
+systems</p>
+
+<pre><code>A * x = s*b,  A^T * x = s*b,  or  A^H * x = s*b,
+</code></pre>
+
+<p>with scaling to prevent overflow. Here A is an upper or lower
+triangular matrix, A<sup>T</sup> denotes the transpose of A, A<sup>H</sup> denotes the
+conjugate transpose of A, x and b are n-element vectors, and s is a
+scaling factor, usually less than or equal to 1, chosen so that the
+components of x will be less than the overflow threshold.  If the
+unscaled problem will not cause overflow, the Level 2 BLAS routine
+SolveTrV is called. If the matrix A is singular (A[j,j] = 0 for
+some j), then s is set to 0 and a non-trivial solution to A*x = 0
+is returned.
+This corresponds to Lapackk routines _latrs.</p>
+
+<a name="Authors"></a>
+<h3>Authors</h3>
+
+<ul>
+<li>Univ. of Tennessee</li>
+<li>Univ. of California Berkeley</li>
+<li>Univ. of Colorado Denver</li>
+<li>NAG Ltd.</li>
+</ul>
+
+
+<a name="Details"></a>
+<h3>Details</h3>
+
+<p>A rough bound on x is computed; if that is less than overflow,
+SolveTrV is called, otherwise, specific code is used which checks
+for possible overflow or divide-by-zero at every operation.</p>
+
+<p>A columnwise scheme is used for solving A*x = b. The basic algorithm
+if A is lower triangular is</p>
+
+<pre><code>x[0..n] := b[0..n]
+for j = 0..n
+    x[j] /= A[j,j]
+    x[j+1..n] -= x[j] * A[j+1..n,j]
+end
+</code></pre>
+
+<p>Define bounds on the components of x after j iterations of the loop:</p>
+
+<pre><code>M[j] = bound on x[0..j]
+G[j] = bound on x[j+1..n]
+</code></pre>
+
+<p>Initially, let M[0] = 0 and G[0] = max{x[i], i=0..n}.
+Then for iteration j+1 we have</p>
+
+<pre><code>M[j+1] &lt;= G[j] / | A[j+1,j+1] |
+G[j+1] &lt;= G[j] + M[j+1] * | A[j+2..n,j+1] |
+       &lt;= G[j] ( 1 + cnorm(j+1) / | A[j+1,j+1] | )
+</code></pre>
+
+<p>where CNORM(j+1) is greater than or equal to the infinity-norm of
+column j+1 of A, not counting the diagonal.  Hence</p>
+
+<pre><code>G[j] &lt;= G[0]  Prod ( 1 + cnorm[i] / | A[i,i] | )
+             i=1..j+1
+</code></pre>
+
+<p>and</p>
+
+<pre><code>|x[j]| &lt;= ( G[0] / |A[j,j]| ) Prod ( 1 + cnorm[i] / |A[i,i]| )
+                             i=1..j
+</code></pre>
+
+<p>Since |x[j]| &lt;= M[j], we use the Level 2 BLAS routine SolveTrV
+if the reciprocal of the largest M(j), j=1,..,n, is larger than
+max(underflow, 1/overflow).</p>
+
+<p>The bound on x[j] is also used to determine when a step in the
+columnwise method can be performed without fear of overflow.  If
+the computed bound is greater than a large constant, x is scaled to
+prevent overflow, but if the bound overflows, x is set to 0, x[j] to
+1, and scale to 0, and a non-trivial solution to A*x = 0 is found.</p>
+
+<p>Similarly, a row-wise scheme is used to solve A<sup>T</sup> <em>x = b  or
+A<sup>H</sup> </em>x = b.  The basic algorithm for A upper triangular is</p>
+
+<pre><code>for j = 0..n
+    x[j] := ( b[j] - A[0..j,j]' * x[0..j] ) / A[j,j]
+end
+</code></pre>
+
+<p>We simultaneously compute two bounds</p>
+
+<pre><code>G[j] = bound on ( b[i] - A[0..i,i]' * x[0..i] ), i=0..j+1
+M[j] = bound on x[i], i=0..j+1
+</code></pre>
+
+<p>The initial values are G[0] = 0, M[0] = max{b[i], i=0..n}, and we
+add the constraint G[j] >= G[j-1] and M[j] >= M[j-1] for j >= 1.
+Then the bound on x[j] is</p>
+
+<pre><code>M[j] &lt;= M[j-1] * ( 1 + cnorm[j] ) / | A[j,j] |
+     &lt;= M[0] *  Prod ( ( 1 + cnorm[i] ) / |A[i,i]| )
+              i=1..j+1
+</code></pre>
+
+<p>and we can safely call SolveTrV if 1/M[n] and 1/G[n] are both greater
+than max(underflow, 1/overflow).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>uplo</dt>
+<dd> If &ldquo;U&rdquo;, the upper triangle of A is given.
+   If &ldquo;L&rdquo;, the lower triangle of A is given.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, op(A) = A. If &ldquo;T&rdquo;, op(A) = A<sup>T</sup>. If &ldquo;C&rdquo;, op(A) = A<sup>H</sup>.</dd>
+<dt>diag</dt>
+<dd> If &ldquo;U&rdquo;, the diagonal of A is assumed to be all 1&rsquo;s.
+   If &ldquo;N&rdquo;, the diagonal of A is given.</dd>
+<dt>normin</dt>
+<dd> If &ldquo;Y&rdquo;, cnorm contains column norms on entry.
+   If &ldquo;N&rdquo;, cnorm will be filled in.</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A, lda >= n.</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the x vector. On entry, it
+   is the right hand side vector b. On exit, it is overwritten
+   by the solution x.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the x vector, incx > 0.</dd>
+<dt>scale</dt>
+<dd> Returned scaling factor s for the triangular system. If zero,
+  the matrix A is singular or badly scaled, and the vector x
+  is an exact or approximate solution to A*x = 0.</dd>
+<dt>cnorm</dt>
+<dd> Length n array of column norms. If normin = &ldquo;Y&rdquo;, cnorm is an
+  input argument and cnorm[j] contains the norm of the off-
+  diagonal part of the j-th column of A. If trans = &ldquo;N&rdquo;,
+  cnorm[j] must be greater than or equal to the infinity-norm,
+  and if trans = &ldquo;T&rdquo; or &ldquo;C&rdquo;, cnorm[j] must be greater than or
+  equal to the 1-norm. If normin = &ldquo;N&rdquo;, cnorm is an output
+  argument and cnorm[j] returns the 1-norm of the offdiagonal
+  part of the j-th column of A.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Solve(
+    const char *uplo, const char *trans,
+    const char *diag, const char *normin,
+    size_t n, T *a, size_t lda, T *x,
+    typename Traits&lt;T&gt;::real_type *scale,
+    typename Traits&lt;T&gt;::real_type *cnorm
 )
 </code></pre>
 </body>
