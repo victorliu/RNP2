@@ -585,7 +585,8 @@ void SymmetricQRIteration(
 // The eigenvectors of T can be found by initializing Z to the
 // identity matrix.
 //
-// This is equivalent to Lapack routine _steqr.
+// This is equivalent to Lapack routine _steqr, except eigenvalues are
+// not sorted.
 //
 // Arguments
 // n       The number of rows and columns of the matrix.
@@ -1197,7 +1198,8 @@ void MultQHerm(
 // where T is the given tridiagonal matrix, D is the diagonal matrix of
 // eigenvalues returned in diag, and Z is the matrix of eigenvectors.
 //
-// This is equivalent to Lapack routine _stev.
+// This is equivalent to Lapack routine _stev, except eigenvalues are
+// not sorted.
 //
 // Arguments
 // n       The number of rows and columns of the matrix.

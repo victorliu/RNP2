@@ -24,7 +24,8 @@ namespace LA{
 // symmetric matrices. The right eigenvectors are returned as columns
 // of the same matrix A.
 //
-// Equivalent to Lapack routines zheev/cheev and dsyev/ssyev.
+// Equivalent to Lapack routines zheev/cheev and dsyev/ssyev, except
+// eigenvalues are not sorted.
 //
 // Arguments
 // job   If "N", only eigenvalues are computed. If "V" the

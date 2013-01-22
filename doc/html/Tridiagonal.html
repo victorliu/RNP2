@@ -276,7 +276,8 @@ eigenvalues returned in diag, and Z is the matrix of eigenvectors.
 The eigenvectors of T can be found by initializing Z to the
 identity matrix.</p>
 
-<p>This is equivalent to Lapack routine _steqr.</p>
+<p>This is equivalent to Lapack routine _steqr, except eigenvalues are
+not sorted.</p>
 
 <a name="Arguments"></a>
 <h3>Arguments</h3>
@@ -646,7 +647,8 @@ The diagonalizing transform is</p>
 <p>where T is the given tridiagonal matrix, D is the diagonal matrix of
 eigenvalues returned in diag, and Z is the matrix of eigenvectors.</p>
 
-<p>This is equivalent to Lapack routine _stev.</p>
+<p>This is equivalent to Lapack routine _stev, except eigenvalues are
+not sorted.</p>
 
 <a name="Arguments"></a>
 <h3>Arguments</h3>
