@@ -241,6 +241,32 @@ void Conjugate(size_t n, T* RNP_RESTRICT x, size_t incx){
 ///////////////////////////////////////////////////////////////////////
 // Rescale
 // -------
+// Rescales every element of a vector by an integer power of 2.
+//
+// Arguments
+// n     Number of elements in the vector.
+// p     The power of 2 of the scale factor (2^p).
+// x     Pointer to the first element of the vector.
+// incx  Increment between elements of the vector, incx > 0.
+//
+template <typename T>
+void Rescale(size_t n, int p, T *x, size_t incx){
+	while(n --> 0){
+		*x = std::ldexp(*x, p);
+		x += incx;
+	}
+}
+template <typename T>
+void Rescale(size_t n, int p, std::complex<T> *x, size_t incx){
+	while(n --> 0){
+		*x = std::complex<T>(std::ldexp(x->real(), p), std::ldexp(x->imag(), p));
+		x += incx;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+// Rescale
+// -------
 // Rescales every element of a matrix safely. The scale factor is
 // specified as a ratio cto/cfrom. One typically specifies cfrom
 // as the element norm of the existing matrix, and cto as the target

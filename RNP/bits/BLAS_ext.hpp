@@ -101,6 +101,11 @@ void Conjugate(size_t n, double *x, size_t incx);
 void Conjugate(size_t n, std::complex<float> *x, size_t incx);
 void Conjugate(size_t n, std::complex<double> *x, size_t incx);
 
+void Rescale(size_t n, int p, float *x, size_t incx);
+void Rescale(size_t n, int p, double *x, size_t incx);
+void Rescale(size_t n, int p, std::complex<float> *x, size_t incx);
+void Rescale(size_t n, int p, std::complex<double> *x, size_t incx);
+
 void Rescale(const char *type, size_t kl, size_t ku, const float &cfrom, const float &cto, size_t m, size_t n, float *a, size_t lda);
 void Rescale(const char *type, size_t kl, size_t ku, const double &cfrom, const double &cto, size_t m, size_t n, double *a, size_t lda);
 void Rescale(const char *type, size_t kl, size_t ku, const float &cfrom, const float &cto, size_t m, size_t n, std::complex<float> *a, size_t lda);

@@ -53,6 +53,12 @@
    <li><a href="#Prototype">Prototype</a></li>
   </ul>
   </li>
+  <li><a href="#Rescale">Rescale</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
   <li><a href="#Norm1">Norm1</a>
   <ul class="tocsub">
    <li><a href="#Arguments">Arguments</a></li>
@@ -971,6 +977,34 @@ void Copy(
 
 <pre><code>template &lt;typename T&gt;
 void Conjugate(size_t n, T* RNP_RESTRICT x, size_t incx)
+</code></pre>
+
+<hr />
+
+<a name="Rescale"></a>
+<h2>Rescale</h2>
+
+<p>Rescales every element of a vector by an integer power of 2.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of elements in the vector.</dd>
+<dt>p</dt>
+<dd> The power of 2 of the scale factor (2<sup>p</sup>).</dd>
+<dt>x</dt>
+<dd> Pointer to the first element of the vector.</dd>
+<dt>incx</dt>
+<dd> Increment between elements of the vector, incx > 0.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Rescale(size_t n, int p, T *x, size_t incx)
 </code></pre>
 
 <hr />

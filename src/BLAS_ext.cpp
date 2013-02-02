@@ -189,6 +189,33 @@ void Conjugate(size_t n, std::complex<double> *x, size_t incx){
 	Conjugate_generic(n, x, incx);
 }
 
+template <typename T>
+void Rescale_generic(size_t n, int p, T *x, size_t incx){
+	while(n --> 0){
+		*x = std::ldexp(*x, p);
+		x += incx;
+	}
+}
+void Rescale(size_t n, int p, float *x, size_t incx){
+	Rescale_generic(n, p, x, incx);
+}
+void Rescale(size_t n, int p, double *x, size_t incx){
+	Rescale_generic(n, p, x, incx);
+}
+template <typename T>
+void Rescale_generic_complex(size_t n, int p, std::complex<T> *x, size_t incx){
+	while(n --> 0){
+		*x = std::complex<T>(std::ldexp(x->real(), p), std::ldexp(x->imag(), p));
+		x += incx;
+	}
+}
+void Rescale(size_t n, int p, std::complex<float> *x, size_t incx){
+	Rescale_generic_complex(n, p, x, incx);
+}
+void Rescale(size_t n, int p, std::complex<double> *x, size_t incx){
+	Rescale_generic_complex(n, p, x, incx);
+}
+
 template <typename TS, typename T>
 void Rescale_generic(const char *type, size_t kl, size_t ku, const TS &cfrom, const TS &cto, size_t m, size_t n, T *a, size_t lda){
 	if(n == 0 || m == 0){ return; }
