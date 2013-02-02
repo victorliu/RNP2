@@ -111,14 +111,14 @@ void Factor_unblocked(
 // Equivalent to Lapack routines _gelqf.
 //
 // Arguments
-// m    Number of rows of the matrix A.
-// n    Number of columns of the matrix A.
-// a    Pointer to the first element of A. On exit, the lower
-//      triangle of A contains the L factor (lower triangular from
-//      the bottom right of the matrix), and the upper triangle
-//      stores the vectors v of the elementary reflectors in rows.
-// lda  Leading dimension of the array containing A (lda >= m).
-// tau  Output vector of tau's.
+// m     Number of rows of the matrix A.
+// n     Number of columns of the matrix A.
+// a     Pointer to the first element of A. On exit, the lower
+//       triangle of A contains the L factor (lower triangular from
+//       the bottom right of the matrix), and the upper triangle
+//       stores the vectors v of the elementary reflectors in rows.
+// lda   Leading dimension of the array containing A (lda >= m).
+// tau   Output vector of tau's.
 // lwork Length of workspace (>= m). If *lwork == 0 or NULL == work,
 //       then the optimal size is returned in this argument.
 // work  Workspace of size lwork.
@@ -424,8 +424,6 @@ void MultQ(
 //       it should start at row m-n.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // work  Workspace of size m.
 //
 template <class T>
@@ -485,8 +483,6 @@ void GenerateQ_unblocked(
 //       i = 0..k.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // lwork Lenth of workspace, lwork >= m.
 //       If *lwork == 0 or NULL == work, then the optimal size is
 //       returned in this argument.

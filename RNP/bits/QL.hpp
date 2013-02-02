@@ -116,9 +116,9 @@ void Factor_unblocked(
 // m     Number of rows of the matrix A.
 // n     Number of columns of the matrix A.
 // a     Pointer to the first element of A. On exit, the lower
-//      triangle of A contains the L factor (lower triangular from
-//      the bottom right of the matrix), and the upper triangle
-//      stores the vectors v of the elementary reflectors in columns.
+//       triangle of A contains the L factor (lower triangular from
+//       the bottom right of the matrix), and the upper triangle
+//       stores the vectors v of the elementary reflectors in columns.
 // lda   Leading dimension of the array containing A (lda >= m).
 // tau   Output vector of tau's.
 // lwork Length of workspace (>= n). If *lwork == 0 or NULL == work,
@@ -439,8 +439,6 @@ void MultQ(
 //       it should start at column n-m.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // work  Workspace of size n.
 //
 template <class T>
@@ -494,8 +492,6 @@ void GenerateQ_unblocked(
 //       it should start at column n-m.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // lwork Lenth of workspace, lwork >= n.
 //       If *lwork == 0 or NULL == work, then the optimal size is
 //       returned in this argument.

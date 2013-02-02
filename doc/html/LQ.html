@@ -169,9 +169,9 @@ Equivalent to Lapack routines _gelqf.</p>
 <dd> Number of columns of the matrix A.</dd>
 <dt>a</dt>
 <dd> Pointer to the first element of A. On exit, the lower
- triangle of A contains the L factor (lower triangular from
- the bottom right of the matrix), and the upper triangle
- stores the vectors v of the elementary reflectors in rows.</dd>
+  triangle of A contains the L factor (lower triangular from
+  the bottom right of the matrix), and the upper triangle
+  stores the vectors v of the elementary reflectors in rows.</dd>
 <dt>lda</dt>
 <dd> Leading dimension of the array containing A (lda >= m).</dd>
 <dt>tau</dt>
@@ -389,10 +389,6 @@ Equivalent to Lapack routines <em>ungl2 and </em>orgl2.</p>
 <dd> Leading dimension of the array containing Q, lda >= m.</dd>
 <dt>tau</dt>
 <dd> Array of tau&rsquo;s, length k.</dd>
-<dt>c</dt>
-<dd> Pointer to the first element of the matrix C.</dd>
-<dt>ldc</dt>
-<dd> Leading dimension of the array containing C.</dd>
 <dt>work</dt>
 <dd> Workspace of size m.</dd>
 </dl>
@@ -434,10 +430,6 @@ Equivalent to Lapack routines <em>unglq and </em>orglq.</p>
 <dd> Leading dimension of the array containing Q, lda >= m.</dd>
 <dt>tau</dt>
 <dd> Array of tau&rsquo;s, length k.</dd>
-<dt>c</dt>
-<dd> Pointer to the first element of the matrix C.</dd>
-<dt>ldc</dt>
-<dd> Leading dimension of the array containing C.</dd>
 <dt>lwork</dt>
 <dd> Lenth of workspace, lwork >= m.
   If *lwork == 0 or NULL == work, then the optimal size is

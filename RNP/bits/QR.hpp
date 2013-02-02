@@ -446,8 +446,6 @@ void MultQ(
 //       i = 0..k-1. On exit, the matrix Q.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // work  Workspace of size n.
 //
 template <class T>
@@ -503,8 +501,6 @@ void GenerateQ_unblocked(
 //       i = 0..k-1. On exit, the matrix Q.
 // lda   Leading dimension of the array containing Q, lda >= m.
 // tau   Array of tau's, length k.
-// c     Pointer to the first element of the matrix C.
-// ldc   Leading dimension of the array containing C.
 // lwork Lenth of workspace, lwork >= n.
 //       If *lwork == 0 or NULL == work, then the optimal size is
 //       returned in this argument.
