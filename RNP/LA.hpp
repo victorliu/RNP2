@@ -2,8 +2,11 @@
 #define RNP_LA_HPP_INCLUDED
 
 #include "bits/Permutation.hpp"
+#include "bits/Reflector.hpp"
+#include "bits/Rotation.hpp"
 #include "bits/MatrixNorms.hpp"
 #include "bits/Triangular.hpp"
+#include "bits/Hessenberg.hpp"
 
 // LU factorization
 #include "bits/LU.hpp"

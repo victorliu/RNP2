@@ -1,0 +1,539 @@
+<html>
+<head>
+<title>RNP::LA::Hessenberg</title>
+<style type="text/css">
+@import url(../style.css);
+</style>
+</head>
+<body>
+<ul id=toc>
+ <li><a href="#RNP::LA::Hessenberg">RNP::LA::Hessenberg</a>
+ <ul class="tocsub">
+  <li><a href="#Tuning">Tuning</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Norm">Norm</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Reduce_unblocked">Reduce_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Util::Reduce_block">Util::Reduce_block</a>
+  <ul class="tocsub">
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#Reduce">Reduce</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#MultQ">MultQ</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#GenerateQ">GenerateQ</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+  <li><a href="#ReduceGeneralized_unblocked">ReduceGeneralized_unblocked</a>
+  <ul class="tocsub">
+   <li><a href="#Arguments">Arguments</a></li>
+   <li><a href="#Prototype">Prototype</a></li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<hr />
+
+<a name="RNP::LA::Hessenberg"></a>
+<h1>RNP::LA::Hessenberg</h1>
+
+<p>Routines dealing with Hessenberg matrices and reduction of square
+matrices to Hessenberg form.</p>
+
+<hr />
+
+<a name="Tuning"></a>
+<h2>Tuning</h2>
+
+<p>Specialize this class to tune the block sizes. The optimal block
+size should be greater than or equal to the minimum block size.
+The value of the crossover determines when to enable blocking.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+struct Tuning
+</code></pre>
+
+<hr />
+
+<a name="Norm"></a>
+<h2>Norm</h2>
+
+<p>Returns the value of the 1-norm, Frobenius norm, infinity norm, or
+the  element of largest absolute value of an upper Hessenberg
+matrix A. Note that the maximum element magnitude is not a
+consistent matrix norm.
+Equivalent to Lapack routines _lanhs.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>norm</dt>
+<dd> Specifies which norm to return:
+   If norm = &ldquo;M&rdquo;, returns max(abs(A[i,j])).
+   If norm = &ldquo;1&rdquo; or &ldquo;O&rdquo;, returns norm1(A) (max column sum).
+   If norm = &ldquo;I&rdquo;, returns normInf(A) (max row sum).
+   If norm = &ldquo;F&rdquo; or &ldquo;E&rdquo;, returns normFrob(A).</dd>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix A.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= n).</dd>
+<dt>work</dt>
+<dd> Optional workspace of size n when norm = &ldquo;I&rdquo;. If work = NULL,
+ the norm is computed slightly less efficiently.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+typename Traits&lt;T&gt;::real_type Norm(
+    const char *norm, size_t n, const T *a, size_t lda, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="Reduce_unblocked"></a>
+<h2>Reduce_unblocked</h2>
+
+<p>Reduces a general square matrix A to upper Hessenberg form H
+by a unitary similarity transformation: Q<sup>H</sup> * A * Q = H.
+This routine uses only level 2 BLAS.
+Equivalent to Lapack routines _gehd2.</p>
+
+<p>The matrix Q is represented as a product of (ihi-ilo-1) elementary
+reflectors</p>
+
+<pre><code>Q = H[ilo] H[ilo+1] ... H[ihi-2].
+</code></pre>
+
+<p>Each H[i] has the form</p>
+
+<pre><code>H[i] = I - tau * v * v'
+</code></pre>
+
+<p>where tau is a scalar, and v is a vector with v[0:i+1] = 0,
+v[i+1] = 1 and v[ihi:n] = 0; v[i+2:ihi] is stored on exit in
+A[i+2:ihi,i], and tau in tau[i].</p>
+
+<p>The contents of A are illustrated by the following example, with
+n = 7, ilo = 1 and ihi = 6:</p>
+
+<pre><code>On entry:                        On exit:
+[ a   a   a   a   a   a   a ]    [  a   a   h   h   h   h   a ]
+[     a   a   a   a   a   a ]    [      a   h   h   h   h   a ]
+[     a   a   a   a   a   a ]    [      h   h   h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  h   h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  v2  h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  v2  v3  h   h   h ]
+[                         a ]    [                          a ]
+</code></pre>
+
+<p>where a denotes an element of the original matrix A, h denotes a
+modified element of the upper Hessenberg matrix H, and vi denotes an
+element of the vector defining H[i].</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix A.</dd>
+<dt>ilo</dt>
+<dd> It is assumed that A is already upper triangular in rows and</dd>
+<dt>ihi</dt>
+<dd> columns 0:ilo-1 and ihi:n (that is, the reduction is performed
+ on the range ilo:ihi. Usually these are returned by a balancing
+ routine. 0 &lt;= ilo &lt; ihi &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= n).</dd>
+<dt>tau</dt>
+<dd> The scale factors of the elementary reflectors, length n-1.</dd>
+<dt>work</dt>
+<dd> Workspace of size n.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Reduce_unblocked(
+    size_t n, size_t ilo, size_t ihi, T *a, size_t lda, T *tau, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="Util::Reduce_block"></a>
+<h2>Util::Reduce_block</h2>
+
+<p>Reduces the first nb columns of a general n-by-(n-k+1) matrix A so
+that elements below the k-th subdiagonal are zero. The reduction is
+performed by a unitary similarity transformation Q<sup>H</sup> * A * Q.
+The routine returns the matrices V and T which determine Q as a
+block reflector I - V<em>T</em>V<sup>H</sup>, and also the matrix Y = A * V * T.
+This is equivalent to Lapack routine _lahr2. No further explanation
+will be given.</p>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Reduce_block(
+    size_t n, size_t k, size_t nb, T *a, size_t lda,
+    T *tau, T *t, size_t ldt, T *y, size_t ldy
+)
+</code></pre>
+
+<hr />
+
+<a name="Reduce"></a>
+<h2>Reduce</h2>
+
+<p>Reduces a general square matrix A to upper Hessenberg form H
+by a unitary similarity transformation: Q<sup>H</sup> * A * Q = H.
+Equivalent to Lapack routines _gehrd.</p>
+
+<p>The matrix Q is represented as a product of (ihi-ilo-1) elementary
+reflectors</p>
+
+<pre><code>Q = H[ilo] H[ilo+1] ... H[ihi-2].
+</code></pre>
+
+<p>Each H[i] has the form</p>
+
+<pre><code>H[i] = I - tau * v * v'
+</code></pre>
+
+<p>where tau is a scalar, and v is a vector with v[0:i+1] = 0,
+v[i+1] = 1 and v[ihi:n] = 0; v[i+2:ihi] is stored on exit in
+A[i+2:ihi,i], and tau in tau[i].</p>
+
+<p>The contents of A are illustrated by the following example, with
+n = 7, ilo = 1 and ihi = 6:</p>
+
+<pre><code>On entry:                        On exit:
+[ a   a   a   a   a   a   a ]    [  a   a   h   h   h   h   a ]
+[     a   a   a   a   a   a ]    [      a   h   h   h   h   a ]
+[     a   a   a   a   a   a ]    [      h   h   h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  h   h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  v2  h   h   h   h ]
+[     a   a   a   a   a   a ]    [      v1  v2  v3  h   h   h ]
+[                         a ]    [                          a ]
+</code></pre>
+
+<p>where a denotes an element of the original matrix A, h denotes a
+modified element of the upper Hessenberg matrix H, and vi denotes an
+element of the vector defining H[i].</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix A.</dd>
+<dt>ilo</dt>
+<dd> It is assumed that A is already upper triangular in rows and</dd>
+<dt>ihi</dt>
+<dd> columns 0:ilo-1 and ihi:n (that is, the reduction is performed
+  on the range ilo:ihi. Usually these are returned by a
+  balancing routine. 0 &lt;= ilo &lt; ihi &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= n).</dd>
+<dt>tau</dt>
+<dd> The scale factors of the elementary reflectors, length n-1.</dd>
+<dt>lwork</dt>
+<dd> Length of workspace (>= n). If *lwork == 0 or NULL == work,
+  then the optimal size is returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void Reduce(
+    size_t n, size_t ilo, size_t ihi, T *a, size_t lda,
+    T *tau, size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="MultQ"></a>
+<h2>MultQ</h2>
+
+<p>From an existing Hessenberg reduction, multiplies a given matrix by
+the unitary matrix Q. The given m-by-n matrix C is overwritten with:</p>
+
+<table>
+<thead>
+<tr>
+<th>trans </th>
+<th> side = &ldquo;L&rdquo;   </th>
+<th> side = &ldquo;R&rdquo;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&ldquo;N&rdquo;  </td>
+<td>   Q   * C    </td>
+<td>  C * Q</td>
+</tr>
+<tr>
+<td>&ldquo;C&rdquo;  </td>
+<td>   Q<sup>H</sup> * C    </td>
+<td>  C * Q<sup>H</sup></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>where Q is a complex unitary matrix of order nq, with nq = m if
+side = &ldquo;L&rdquo; and nq = n if side = &ldquo;R&rdquo;. Q is defined as the product of
+ihi-ilo-1 elementary reflectors, as returned by Reduce:</p>
+
+<p>Q = H[ilo] H[ilo+1] &hellip; H[ihi-2].
+Equivalent to Lapack routines <em>unmhr and </em>ormhr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>side</dt>
+<dd> If &ldquo;L&rdquo;, apply Q or Q<sup>H</sup> from the left. If &ldquo;R&rdquo;, apply Q or
+  Q<sup>H</sup> from the right.</dd>
+<dt>trans</dt>
+<dd> If &ldquo;N&rdquo;, apply Q. If &ldquo;C&rdquo;, apply Q<sup>H</sup>.</dd>
+<dt>m</dt>
+<dd> Number of rows of the matrix C.</dd>
+<dt>n</dt>
+<dd> Number of columns of the matrix C.</dd>
+<dt>ilo</dt>
+<dd> ilo and ihi should have the same values as in the previous</dd>
+<dt>ihi</dt>
+<dd> call to Reduce. Q is equal to the identity matrix except in
+  submatrix range Q[ilo+1:ihi,ilo+1:ihi]. If side = &ldquo;L&rdquo;, then
+  0 &lt;= ilo &lt; ihi &lt;= m. If side = &ldquo;R&rdquo;, then 0 &lt;= ilo &lt; ihi &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the reduction, as returned by Reduce. If side = &ldquo;L&rdquo;,
+  then it should m columns. If side = &ldquo;R&rdquo;, then it should have n
+  columns.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A.
+  If side = &ldquo;L&rdquo;, lda >= m. If side = &ldquo;R&rdquo;, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s. If side = &ldquo;L&rdquo;, length m-1.
+  If side = &ldquo;R&rdquo;, length n-1.</dd>
+<dt>c</dt>
+<dd> Pointer to the first element of the matrix C.</dd>
+<dt>ldc</dt>
+<dd> Leading dimension of the array containing C, ldc >= m.</dd>
+<dt>lwork</dt>
+<dd> Lenth of workspace.
+  If side = &ldquo;L&rdquo;, lwork >= n. If side = &ldquo;R&rdquo;, lwork >= m.
+  If *lwork == 0 or NULL == work, then the optimal size is
+  returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void MultQ(
+    const char *side, const char *trans, size_t m, size_t n,
+    size_t ilo, size_t ihi, const T *a, size_t lda, const T *tau,
+    T *c, size_t ldc, size_t *lwork, T *work // length n when side is L, else m
+)
+</code></pre>
+
+<hr />
+
+<a name="GenerateQ"></a>
+<h2>GenerateQ</h2>
+
+<p>From an existing Hessenberg reduction, generates the unitary matrix
+Q. The original matrix containing the factorization is overwritten
+by Q.
+Equivalent to Lapack routines <em>unghr and </em>orghr.</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> Number of rows and columns of the matrix Q.</dd>
+<dt>ilo</dt>
+<dd> ilo and ihi should have the same values as in the previous</dd>
+<dt>ihi</dt>
+<dd> call to Reduce. Q is equal to the identity matrix except in
+  submatrix range Q[ilo+1:ihi,ilo+1:ihi], 0 &lt;= ilo &lt; ihi &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the reduction. The i-th column should contain
+  the vector which defines the i-th elementary reflector for
+  i = 0..n-1. On exit, the n-by-n matrix Q.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing Q, lda >= n.</dd>
+<dt>tau</dt>
+<dd> Array of tau&rsquo;s, length n-1.</dd>
+<dt>lwork</dt>
+<dd> Lenth of workspace, lwork >= ihi-ilo-1.
+  If *lwork == 0 or NULL == work, then the optimal size is
+  returned in this argument.</dd>
+<dt>work</dt>
+<dd> Workspace of size lwork.</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void GenerateQ(
+    size_t n, size_t ilo, size_t ihi, T *a, size_t lda,
+    const T *tau, size_t *lwork, T *work
+)
+</code></pre>
+
+<hr />
+
+<a name="ReduceGeneralized_unblocked"></a>
+<h2>ReduceGeneralized_unblocked</h2>
+
+<p>Reduces a pair of matrices (A,B) to generalized upper Hessenberg
+form using unitary transformations, where A is a general matrix
+and B is upper triangular.  The form of the generalized eigenvalue
+problem is</p>
+
+<pre><code>A*x = lambda*B*x,
+</code></pre>
+
+<p>and B is typically made upper triangular by computing its QR
+factorization and moving the unitary matrix Q to the left side
+of the equation.</p>
+
+<p>This subroutine simultaneously reduces A to a Hessenberg matrix H:</p>
+
+<pre><code>Q^H*A*Z = H
+</code></pre>
+
+<p>and transforms B to another upper triangular matrix T:</p>
+
+<pre><code>Q^H*B*Z = T
+</code></pre>
+
+<p>in order to reduce the problem to its standard form</p>
+
+<pre><code>H*y = lambda*T*y
+</code></pre>
+
+<p>where y = Z<sup>H</sup>*x.</p>
+
+<p>The unitary matrices Q and Z are determined as products of Givens
+rotations. They may either be formed explicitly, or they may be
+postmultiplied into input matrices Q1 and Z1, so that</p>
+
+<pre><code>Q1 * A * Z1^H = (Q1*Q) * H * (Z1*Z)^H
+Q1 * B * Z1^H = (Q1*Q) * T * (Z1*Z)^H
+</code></pre>
+
+<p>If Q1 is the unitary matrix from the QR factorization of B in the
+original equation A<em>x = lambda</em>B*x, then this routine reduces the
+original problem to generalized Hessenberg form.</p>
+
+<p>This is equivalent to Lapack routine _gghrd.</p>
+
+<p>This routine performs the Hessenberg-triangular reduction by
+an unblocked reduction, as described in &ldquo;Matrix_Computations&rdquo;,
+by Golub and van Loan (Johns Hopkins Press).</p>
+
+<a name="Arguments"></a>
+<h3>Arguments</h3>
+
+<dl>
+<dt>n</dt>
+<dd> The number of rows and columns and A and B.</dd>
+<dt>ilo</dt>
+<dd> It is assumed that A is already upper triangular in rows and</dd>
+<dt>ihi</dt>
+<dd> columns 0:ilo-1 and ihi:n (that is, the reduction is performed
+  on the range ilo:ihi. Usually these are returned by a
+  balancing routine. 0 &lt;= ilo &lt; ihi &lt;= n.</dd>
+<dt>a</dt>
+<dd> Pointer to the first element of A. On exit, the upper triangle
+  and the first subdiagonal of A are overwritten with the upper
+  Hessenberg matrix H, and the rest is set to zero.</dd>
+<dt>lda</dt>
+<dd> Leading dimension of the array containing A (lda >= n).</dd>
+<dt>b</dt>
+<dd> Pointer to the first element of B. On exit, the upper
+  triangular matrix T = Q<sup>H</sup> B Z.  The elements below the
+  diagonal are set to zero.</dd>
+<dt>ldb</dt>
+<dd> Leading dimension of the array containing B (ldb >= n).</dd>
+<dt>q</dt>
+<dd> Pointer to the first element of Q. If NULL, then Q is not
+  returned. If initialized to the identity matrix, then the
+  matrix Q is returned. If initialized to Q1, then the product
+  Q1*Q is returned.</dd>
+<dt>ldq</dt>
+<dd> Leading dimension of the array containing Q (ldq >= n).</dd>
+<dt>z</dt>
+<dd> Pointer to the first element of Z. If NULL, then Z is not
+  returned. If initialized to the identity matrix, then the
+  matrix Z is returned. If initialized to Z1, then the product
+  Z1*Z is returned.</dd>
+<dt>ldz</dt>
+<dd> Leading dimension of the array containing Z (ldz >= n).</dd>
+</dl>
+
+<a name="Prototype"></a>
+<h3>Prototype</h3>
+
+<pre><code>template &lt;typename T&gt;
+void ReduceGeneralized_unblocked(
+    size_t n, size_t ilo, size_t ihi,
+    T *a, size_t lda, T *b, size_t ldb,
+    T *q, size_t ldq, T *z, size_t ldz
+)
+</code></pre>
+</body>
+</html>

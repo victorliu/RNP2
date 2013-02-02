@@ -5,6 +5,7 @@ RNP
 * [LA::Permutation](Permutation.html)
 * [LA::Reflector](Reflector.html)
 * [LA::Triangular](Triangular.html)
+* [LA::Hessenberg](Hessenberg.html)
 * [LA::QR](QR.html)
 * [LA::LQ](LQ.html)
 * [LA::QL](QL.html)
