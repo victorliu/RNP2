@@ -1153,6 +1153,439 @@ void Eigenvectors(
 }
 
 
+///////////////////////////////////////////////////////////////////////
+// GeneralizedEigenvectors
+// -----------------------
+// Computes some or all of the right and/or left eigenvectors of
+// a pair of complex matrices (S,P), where S and P are upper triangular.
+// Matrix pairs of this type are produced by the generalized Schur
+// factorization of a complex matrix pair (A,B):
+//
+//     A = Q*S*Z^H,  B = Q*P*Z^H
+//
+// as computed by Hessenberg::ReduceGeneralized and QZ iteration.
+//
+// The right eigenvector x and the left eigenvector y of (S,P)
+// corresponding to an eigenvalue w are defined by:
+//
+//     S*x = w*P*x,  (y^H)*S = w*(y^H)*P,
+//
+// where y^H denotes the conjugate tranpose of y.
+// The eigenvalues are not input to this routine, but are computed
+// directly from the diagonal elements of S and P.
+//
+// This routine returns the matrices X and/or Y of right and left
+// eigenvectors of (S,P), or the products Z*X and/or Q*Y,
+// where Z and Q are input matrices.
+// If Q and Z are the unitary factors from the generalized Schur
+// factorization of a matrix pair (A,B), then Z*X and Q*Y
+// are the matrices of right and left eigenvectors of (A,B).
+//
+// Arguments
+// howmny If "A", compute all right and/or left eigenvectors.
+//        If "B", compute all right and/or left eigenvectors,
+//        backtransformed using the matrices supplied in vr and/or vl.
+//        If "S", compute selected right and/or left eigenvectors,
+//        as indicated by the array select.
+// select Length n array. If howmny = "S", then if select[j] is non-
+//        zero, the eigenvector corresponding to the j-th eigenvalue
+//        computed. Not referenced otherwise.
+// n      Number of rows and columns of S and P.
+// s      Pointer to the first element of S.
+// lds    Leading dimension of the array containing S, lds >= n.
+// p      Pointer to the first element of P.
+// ldp    Leading dimension of the array containing P, ldp >= n.
+// vl     Pointer to the first element of the matrix of left
+//        eigenvectorts. If NULL, the left eigenvectors are not
+//        computed. If howmny = "S", then each eigenvector is stored
+//        consecutively on the columns in the same order as the
+//        eigenvalues, and the required columns are referenced.
+//        Otherwise, all eigenvectors are computed, requiring n
+//        columns. If howmny = "B", then on entry, vl should contain
+//        an n-by-n matrix Q.
+// ldvl   Leading dimension of the array containing vl, ldvl >= n.
+// vr     Pointer to the first element of the matrix of right
+//        eigenvectorts. If NULL, the right eigenvectors are not
+//        computed. If howmny = "S", then each eigenvector is stored
+//        consecutively on the columns in the same order as the
+//        eigenvalues, and the required columns are referenced.
+//        Otherwise, all eigenvectors are computed, requiring n
+//        columns. If howmny = "B", then on entry, vr should contain
+//        an n-by-n matrix Q.
+// ldvr   Leading dimension of the array containing vr, ldvr >= n.
+// work   Workspace of size 2*n.
+// rwork  Workspace of size 2*n.
+//
+template <typename T>
+void GeneralizedEigenvectors(
+	const char *howmny, const int *select, size_t n,
+	const T *s, size_t lds, const T *p, size_t ldp,
+	T *vl, size_t ldvl, T *vr, size_t ldvr,
+	T *work, typename Traits<T>::real_type *rwork
+){
+	typedef typename Traits<T>::real_type real_type;
+	
+	static const real_type rzero(0);
+	static const real_type rone (1);
+	static const T zero(rzero);
+	static const T one ( rone);
+
+	// Count the number of eigenvectors
+	size_t im = n;
+	if('S' == howmny[0]){
+		im = 0;
+		for(size_t j = 0; j < n; ++j){
+			if(select[j]){
+				++im;
+			}
+		}
+	}
+	
+	// Check diagonal of B
+	for(size_t j = 0; j < n; ++j){
+		RNPAssert(rzero == Traits<T>::imag(p[j+j*ldp]));
+	}
+	
+	if(0 == n){
+		return;
+	}
+	
+	// Machine Constants
+	const real_type safmin(Traits<real_type>::min());
+	const real_type ulp(real_type(2) * Traits<real_type>::eps());
+	const real_type small(safmin * real_type(n) / ulp);
+	const real_type big(real_type(1) / small);
+	const real_type bignum(real_type(1) / (safmin * real_type(n)));
+
+	// Compute the 1-norm of each column of the strictly upper triangular
+	// part of A and B to check for possible overflow in the triangular
+	// solver.
+	real_type anorm = Traits<T>::norm1(s[0+0*lds]);
+	real_type bnorm = Traits<T>::norm1(p[0+0*ldp]);
+	rwork[0] = rzero;
+	rwork[n] = rzero;
+	
+	for(size_t j = 1; j < n; ++j){
+		rwork[  j] = rzero;
+		rwork[n+j] = rzero;
+		for(size_t i = 0; i < j; ++i){
+			rwork[  j] += Traits<T>::norm1(s[i+j*lds]);
+			rwork[n+j] += Traits<T>::norm1(p[i+j*ldp]);
+		}
+		real_type temp;
+		temp = rwork[  j] + Traits<T>::norm1(s[j+j*lds]);
+		if(temp > anorm){ anorm = temp; }
+		temp = rwork[n+j] + Traits<T>::norm1(p[j+j*ldp]);
+		if(temp > bnorm){ bnorm = temp; }
+	}
+
+	const real_type ascale = 1. / (anorm > safmin ? anorm : safmin);
+	const real_type bscale = 1. / (bnorm > safmin ? bnorm : safmin);
+
+	if(NULL != vl){ // Left eigenvectors
+		size_t ieig = 0;
+	
+		// Main loop over eigenvalues
+		for(size_t je = 0; je < n; ++je, ++ieig){
+			if('S' == howmny[0] && !select[je]){ continue; }
+
+			if(Traits<T>::norm1(s[je+je*lds]) <= safmin && Traits<real_type>::abs(Traits<T>::real(p[je+je*ldp])) <= safmin){
+				// Singular matrix pencil -- return unit eigenvector
+				for(size_t jr = 0; jr < n; ++jr){
+					vl[jr+ieig*ldvl] = zero;
+				}
+				vl[ieig+ieig*ldvl] = one;
+				continue;
+			}
+
+			// Non-singular eigenvalue:
+			// Compute coefficients a and b in y^H ( a A - b B ) = 0
+			const real_type as(Traits<T>::norm1(s[je+je*lds]) * ascale);
+			const real_type ps(Traits<real_type>::abs(Traits<T>::real(p[je+je*ldp])) * bscale);
+			const real_type ms = (as > ps ? as : ps);
+			const real_type temp = rone / (ms > safmin ? ms : safmin);
+			T salpha = temp*s[je+je*lds] * ascale;
+			real_type sbeta = temp * Traits<T>::real(p[je+je*ldp]) * bscale;
+			real_type acoeff = sbeta * ascale;
+			T bcoeff = bscale * salpha;
+
+			// Scale to avoid underflow
+			const bool lsa = abs(sbeta) >= safmin && abs(acoeff) < small;
+			const bool lsb = Traits<T>::norm1(salpha) >= safmin && Traits<T>::norm1(bcoeff) < small;
+
+			real_type scale(1);
+			if(lsa){
+				scale = small / abs(sbeta) * (anorm < big ? anorm : big);
+			}
+			if(lsb){
+				real_type scale2(small / Traits<T>::norm1(salpha) * (bnorm < big ? bnorm : big));
+				if(scale2 > scale){ scale = scale2; }
+			}
+			if(lsa || lsb){
+				real_type aa(Traits<T>::abs(acoeff));
+				if(rone > aa){ aa = rone; }
+				real_type bb(Traits<T>::norm1(bcoeff));
+				real_type scale2(rone / (safmin * (aa > bb ? aa : bb)));
+				if(scale2 < scale){ scale = scale2; }
+				if(lsa){
+					acoeff = ascale * (scale * sbeta);
+				}else{
+					acoeff = scale * acoeff;
+				}
+				if(lsb){
+					bcoeff = bscale * (scale * salpha);
+				}else{
+					bcoeff *= scale;
+				}
+			}
+
+			const real_type acoefa = Traits<T>::abs(acoeff);
+			const real_type bcoefa = Traits<T>::norm1(bcoeff);
+			real_type xmax(1);
+			for(size_t jr = 0; jr < n; ++jr){
+				work[jr] = zero;
+			}
+			work[je] = one;
+			real_type ua = ulp * acoefa * anorm;
+			real_type ub = ulp * bcoefa * bnorm;
+			real_type um = (ua > ub ? ua : ub);
+			const real_type dmin = (um > safmin ? um : safmin);
+
+			// Triangular solve of  (a A - b B)^H y = 0
+			// (rowwise in (a A - b B)^H , or columnwise in a A - b B)
+
+
+			for(size_t j = je+1; j < n; ++j){
+				// Compute
+				//       j-1
+				// SUM = sum  conj( a*S(k,j) - b*P(k,j) )*x(k)
+				//       k=je
+				// (Scale if necessary)
+
+				const real_type temp = 1. / xmax;
+				if(acoefa * rwork[j] + bcoefa * rwork[n+j] > bignum * temp) {
+					for(size_t jr = je; jr < j; ++jr){
+						work[jr] *= temp;
+					}
+					xmax = rone;
+				}
+				T suma(0), sumb(0);
+
+				for(size_t jr = je; jr < j; ++jr){
+					suma += Traits<T>::conj(s[jr+j*lds]) * work[jr];
+					sumb += Traits<T>::conj(p[jr+j*ldp]) * work[jr];
+				}
+				T sum = acoeff*suma - Traits<T>::conj(bcoeff)*sumb;
+
+
+				// Form x(j) = - SUM / conj( a*S(j,j) - b*P(j,j) )
+				// with scaling and perturbation of the denominator
+				T d = Traits<T>::conj(acoeff*s[j+j*lds] - bcoeff*p[j+j*ldp]);
+				if(Traits<T>::norm1(d) <= dmin){
+					d = dmin;
+				}
+
+				real_type abs1d = Traits<T>::norm1(d);
+				if(abs1d < rone) {
+					real_type abs1sum = Traits<T>::norm1(sum);
+					if(abs1sum >= bignum * abs1d) {
+						const real_type temp = rone / abs1sum;
+						for(size_t jr = je; jr < j; ++jr){
+							work[jr] *= temp;
+						}
+						xmax *= temp;
+						sum *= temp;
+					}
+				}
+				work[j] = -sum/d;
+
+				real_type nwj(Traits<T>::norm1(work[j]));
+				if(nwj > xmax){ xmax = nwj; }
+			}
+
+			// Back transform eigenvector if HOWMNY='B'.
+			size_t isrc = 0, ibeg = je;
+			if('B' == howmny[0]){
+				BLAS::MultMV("N", n, n-je, rone, &vl[0+je*ldvl], ldvl, &work[je], 1, rzero, &work[n], 1);
+				isrc = n;
+				ibeg = 0;
+			}
+
+			// Copy and scale eigenvector into column of VL
+			xmax = rzero;
+			for(size_t jr = ibeg; jr < n; ++jr){
+				real_type nwj(Traits<T>::norm1(work[isrc+jr]));
+				if(nwj > xmax){ nwj = xmax; }
+			}
+
+			if(xmax > safmin){
+				const real_type temp = rone / xmax;
+				for(size_t jr = ibeg; jr < n; ++jr){
+					vl[jr+ieig*ldvl] = temp * work[isrc+jr];
+				}
+			}else{
+				ibeg = n;
+			}
+
+			for(size_t jr = 0; jr < ibeg; ++jr){
+				vl[jr+ieig*ldvl] = zero;
+			}
+		}
+	}
+
+	if(NULL != vr){ // Right eigenvectors
+		size_t ieig = im;
+
+		// Main loop over eigenvalues
+		size_t je = n;
+		while(je --> 0){
+			if('S' == howmny[0] && !select[je]){ continue; }
+			--ieig;
+
+			if (Traits<T>::norm1(s[je+je*lds]) <= safmin && Traits<T>::abs(Traits<T>::real(p[je+je*ldp])) <= safmin) {
+				// Singular matrix pencil -- return unit eigenvector
+				for(size_t jr = 0; jr < n; ++jr){
+					vr[jr+ieig*ldvr] = zero;
+				}
+				vr[ieig+ieig*ldvr] = one;
+				continue;
+			}
+
+			// Non-singular eigenvalue:
+			// Compute coefficients a and b in ( a A - b B ) x  = 0
+			const real_type as(Traits<T>::norm1(s[je+je*lds]) * ascale);
+			const real_type ps(Traits<real_type>::abs(Traits<T>::real(p[je+je*ldp])) * bscale);
+			const real_type ms = (as > ps ? as : ps);
+			const real_type temp = rone / (ms > safmin ? ms : safmin);
+			T salpha = temp*s[je+je*lds] * ascale;
+			real_type sbeta = temp * Traits<T>::real(p[je+je*ldp]) * bscale;
+			real_type acoeff = sbeta * ascale;
+			T bcoeff = bscale * salpha;
+
+			// Scale to avoid underflow
+			const bool lsa = abs(sbeta) >= safmin && abs(acoeff) < small;
+			const bool lsb = Traits<T>::norm1(salpha) >= safmin && Traits<T>::norm1(bcoeff) < small;
+
+			real_type scale(1);
+			if(lsa){
+				scale = small / abs(sbeta) * (anorm < big ? anorm : big);
+			}
+			if(lsb){
+				real_type scale2(small / Traits<T>::norm1(salpha) * (bnorm < big ? bnorm : big));
+				if(scale2 > scale){ scale = scale2; }
+			}
+			if(lsa || lsb){
+				real_type aa(Traits<T>::abs(acoeff));
+				if(rone > aa){ aa = rone; }
+				real_type bb(Traits<T>::norm1(bcoeff));
+				real_type scale2(rone / (safmin * (aa > bb ? aa : bb)));
+				if(scale2 < scale){ scale = scale2; }
+				if(lsa){
+					acoeff = ascale * (scale * sbeta);
+				}else{
+					acoeff = scale * acoeff;
+				}
+				if(lsb){
+					bcoeff = bscale * (scale * salpha);
+				}else{
+					bcoeff *= scale;
+				}
+			}
+
+			const real_type acoefa = abs(acoeff);
+			const real_type bcoefa = Traits<T>::norm1(bcoeff);
+			real_type xmax(1);
+			for(size_t jr = 0; jr < n; ++jr){
+				work[jr] = zero;
+			}
+			work[je] = one;
+			real_type ua = ulp * acoefa * anorm;
+			real_type ub = ulp * bcoefa * bnorm;
+			real_type um = (ua > ub ? ua : ub);
+			const real_type dmin = (um > safmin ? um : safmin);
+			
+
+			// Triangular solve of  (a A - b B) x = 0  (columnwise)
+			// work[0:j] contains sums w, work[j+1:je+1] contains x
+			for(size_t jr = 0; jr < je; ++jr){
+				work[jr] = acoeff*s[jr+je*lds] - bcoeff*p[jr+je*ldp];
+			}
+			work[je] = one;
+
+			size_t j = je;
+			while(j --> 0){
+				// Form x(j) := - w(j) / d
+				// with scaling and perturbation of the denominator
+				T d = acoeff*s[j+j*lds] - bcoeff*p[j+j*ldp];
+				if(Traits<T>::norm1(d) <= dmin){
+					d = dmin;
+				}
+
+				double abs1d = Traits<T>::norm1(d);
+				if(abs1d < rone){
+					double abs1workj = Traits<T>::norm1(work[j]);
+					if(abs1workj >= bignum * abs1d){
+						const real_type temp = rone / abs1workj;
+						for(size_t jr = 0; jr <= je; ++jr){
+							work[jr] *= temp;
+						}
+					}
+				}
+				work[j] = -work[j]/d;
+
+				if(j > 0){
+					// w += x(j)*(a S(*,j) - b P(*,j) ) with scaling
+					double abs1workj = Traits<T>::norm1(work[j]);
+					if(abs1workj > rone){
+						const real_type temp = rone / abs1workj;
+						if(acoefa * rwork[j] + bcoefa * rwork[n + j] >= bignum * temp){
+							for(size_t jr = 0; jr <= je; ++jr){
+								work[jr] *= temp;
+							}
+						}
+					}
+
+					T ca = acoeff*work[j];
+					T cb = bcoeff*work[j];
+					for(size_t jr = 0; jr < j; ++jr){
+						work[jr] += ca*s[jr+j*lds] - cb*p[jr+j*ldp];
+					}
+				}
+			}
+
+			// Back transform eigenvector if HOWMNY='B'.
+			size_t isrc = 0;
+			size_t iend = je+1;
+			if('B' == howmny[0]){
+				BLAS::MultMV("N", n, je+1, rone, vr, ldvr, work, 1, rzero, &work[n], 1);
+				isrc = n;
+				iend = n;
+			}
+
+			// Copy and scale eigenvector into column of VR
+			xmax = rzero;
+			for(size_t jr = 0; jr < iend; ++jr){
+				real_type nwj(Traits<T>::norm1(work[isrc+jr]));
+				if(nwj > xmax){ xmax = nwj; }
+			}
+
+			if(xmax > safmin){
+				const real_type temp = rone / xmax;
+				for(size_t jr = 0; jr < iend; ++jr) {
+					vr[jr+ieig*ldvr] = temp * work[isrc+jr];
+				}
+			}else{
+				iend = 0;
+			}
+
+			for(size_t jr = iend; jr < n; ++jr){
+				vr[jr+ieig*ldvr] = zero;
+			}
+		}
+	}
+}
+
+
 
 template <typename T>
 void ExchangeDiagonal(
@@ -1255,6 +1688,8 @@ void ExchangeDiagonal(
 		}
 	}
 }
+
+
 
 
 } // namespace Triangular
