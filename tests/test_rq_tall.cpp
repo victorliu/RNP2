@@ -105,7 +105,7 @@ void test_rq(size_t m, size_t n){
 	// Apply Q to the right of R
 	RNP::BLAS::Set(m, n, T(0), T(0), B, m);
 	RNP::BLAS::Copy(m-n, n, Afac, m, B, m);
-	RNP::LA::Triangular::Copy("U", "N", n, n, &Afac[m-n+0*m], m, &B[m-n+0*m], m);
+	RNP::LA::Triangular::Copy("U", n, n, &Afac[m-n+0*m], m, &B[m-n+0*m], m);
 	if(0){
 		std::cout << "B = R:" << std::endl;
 		RNP::Matrix<T> mB(m, n, B, m);
@@ -221,7 +221,7 @@ void test_rq(size_t m, size_t n){
 	//  Form R in QQ
 	RNP::BLAS::Set(m, n, T(0), T(0), QQ, m);
 	RNP::BLAS::Copy(m-n, n, Afac, m, QQ, m);
-	RNP::LA::Triangular::Copy("U", "N", n, n, &Afac[m-n+0*m], m, &QQ[m-n+0*m], m);
+	RNP::LA::Triangular::Copy("U", n, n, &Afac[m-n+0*m], m, &QQ[m-n+0*m], m);
 	if(0){
 		std::cout << "QQ = R:" << std::endl;
 		RNP::Matrix<T> mB(m, n, QQ, m);

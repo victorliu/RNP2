@@ -154,8 +154,6 @@ int Invert(
 // Arguments
 // uplo  If "U", the matrix is upper triangular.
 //       If "L", the matrix is lower triangular.
-// diag  If "U", the matrix is assumed to have only 1's on the diagonal.
-//       If "N", the diagonal is given.
 // m     Number of rows of the matrix.
 // n     Number of columns of the matrix.
 // src   Pointer to the first element of the source matrix.
@@ -167,24 +165,61 @@ int Invert(
 //
 template <typename T>
 void Copy(
-	const char *uplo, const char *diag, size_t m, size_t n,
+	const char *uplo, size_t m, size_t n,
 	const T* src, size_t ldsrc,
 	T* dst, size_t lddst
 ){
 	if('L' == uplo[0]){
 		for(size_t j = 0; j < n; ++j){
-			size_t i0 = ('N' == diag[0] ? j : j+1);
-			for(size_t i = i0; i < m; ++i){
+			for(size_t i = j; i < m; ++i){
 				dst[i+j*lddst] = src[i+j*ldsrc];
 			}
 		}
 	}else{
 		for(size_t j = 0; j < n; ++j){
-			size_t ilim = ('N' == diag[0] ? j+1 : j);
-			if(m < ilim){ ilim = m; }
+			size_t ilim = (m < j+1 ? m : j+1);
 			for(size_t i = 0; i < ilim; ++i){
 				dst[i+j*lddst] = src[i+j*ldsrc];
 			}
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+// Set
+// ---
+// Sets a triangular matrix.
+//
+// Arguments
+// uplo    If "U", the matrix is upper triangular.
+//         If "L", the matrix is lower triangular.
+// m       Number of rows of the matrix.
+// n       Number of columns of the matrix.
+// offdiag Value to set the offdiagonal elements.
+// diag    Value to set the diagonal elements.
+// a       Pointer to the first element of the matrix.
+// lda     Leading dimension of the array containing the matrix,
+//         lda >= m.
+//
+template <typename T, typename TS>
+void Set(
+	const char *uplo, size_t m, size_t n,
+	const TS &offdiag, const TS &diag,
+	T* a, size_t lda
+){
+	if('L' == uplo[0]){
+		for(size_t j = 0; j < n; ++j){
+			if(j < m){ a[j+j*lda] = diag; }
+			for(size_t i = j+1; i < m; ++i){
+				a[i+j*lda] = offdiag;
+			}
+		}
+	}else{
+		for(size_t j = 0; j < n; ++j){
+			for(size_t i = 0; i < j; ++i){
+				a[i+j*lda] = offdiag;
+			}
+			if(j < m){ a[j+j*lda] = diag; }
 		}
 	}
 }
@@ -1116,6 +1151,111 @@ void Eigenvectors(
 		}
 	}
 }
+
+
+
+template <typename T>
+void ExchangeDiagonal(
+	size_t n, T *t, size_t ldt, T *q, size_t ldq, size_t ifst, size_t ilst
+){
+
+    // Purpose
+    // =======
+    // 
+    // ZTREXC reorders the Schur factorization of a complex matrix
+    // A = Q*T*Q^H, so that the diagonal element of T with row index IFST
+    // is moved to row ILST.
+    // 
+    // The Schur form T is reordered by a unitary similarity transformation
+    // Z^H*T*Z, and optionally the matrix Q of Schur vectors is updated by
+    // postmultplying it with Z.
+    // 
+    // Arguments
+    // =========
+    // 
+    // COMPQ   (input) char*1
+    // = 'V':  update the matrix Q of Schur vectors;
+    // = 'N':  do not update Q.
+    // 
+    // N       (input) int
+    // The order of the matrix T. N >= 0.
+    // 
+    // T       (input/output) std::complex<double> array, dimension (LDT,N)
+    // On entry, the upper triangular matrix T.
+    // On exit, the reordered upper triangular matrix.
+    // 
+    // LDT     (input) int
+    // The leading dimension of the array T. LDT >= max(1,N).
+    // 
+    // Q       (input/output) std::complex<double> array, dimension (LDQ,N)
+    // On entry, if COMPQ = 'V', the matrix Q of Schur vectors.
+    // On exit, if COMPQ = 'V', Q has been postmultiplied by the
+    // unitary transformation matrix Z which reorders T.
+    // If COMPQ = 'N', Q is not referenced.
+    // 
+    // LDQ     (input) int
+    // The leading dimension of the array Q.  LDQ >= max(1,N).
+    // 
+    // IFST    (input) int
+    // ILST    (input) int
+    // Specify the reordering of the diagonal elements of T:
+    // The element with row index IFST is moved to row ILST by a
+    // sequence of transpositions between adjacent elements.
+    // 1 <= IFST <= N; 1 <= ILST <= N.
+	if(n <= 1 || ifst == ilst){ return; }
+
+	if(ifst < ilst){ // Move the IFST-th diagonal element forward down the diagonal.
+		for(size_t k = ifst; k < ilst; ++k){
+			// Interchange the k-th and (k+1)-th diagonal elements.
+			T t11 = t[k+k*ldt];
+			T t22 = t[(k+1)+(k+1)*ldt];
+			
+			// Determine the transformation to perform the interchange.
+			double cs;
+			T sn, temp;
+			Rotation::Generate(t[k+(k+1)*ldt], t22-t11, &cs, &sn, &temp);
+
+			// Apply transformation to the matrix T.
+			if(k+2 < n){
+				Rotation::Apply(n-k-2, &t[k+(k+2)*ldt], ldt, &t[(k+1)+(k+2)*ldt], ldt, cs, sn);
+			}
+			Rotation::Apply(k, &t[0+k*ldt], 1, &t[0+(k+1)*ldt], 1, cs, std::conj(sn));
+
+			t[k+k*ldt] = t22;
+			t[(k+1)+(k+1)*ldt] = t11;
+			
+			if(NULL != q){ // Accumulate transformation in the matrix Q.
+				Rotation::Apply(n, &q[0+k*ldq], 1, &q[0+(k+1)*ldq], 1, cs, std::conj(sn));
+			}
+		}
+	}else{ // Move the IFST-th diagonal element backward up the diagonal.
+		size_t k = ifst;
+		while(k --> ilst){
+			// Interchange the k-th and (k+1)-th diagonal elements.
+			T t11 = t[k+k*ldt];
+			T t22 = t[(k+1)+(k+1)*ldt];
+			
+			// Determine the transformation to perform the interchange.
+			double cs;
+			T sn, temp;
+			Rotation::Generate(t[k+(k+1)*ldt], t22-t11, &cs, &sn, &temp);
+
+			// Apply transformation to the matrix T.
+			if(k+2 < n){
+				Rotation::Apply(n-k-2, &t[k+(k+2)*ldt], ldt, &t[(k+1)+(k+2)*ldt], ldt, cs, sn);
+			}
+			Rotation::Apply(k, &t[0+k*ldt], 1, &t[0+(k+1)*ldt], 1, cs, std::conj(sn));
+
+			t[k+k*ldt] = t22;
+			t[(k+1)+(k+1)*ldt] = t11;
+			
+			if(NULL != q){ // Accumulate transformation in the matrix Q.
+				Rotation::Apply(n, &q[0+k*ldq], 1, &q[0+(k+1)*ldq], 1, cs, std::conj(sn));
+			}
+		}
+	}
+}
+
 
 } // namespace Triangular
 } // namespace LA
