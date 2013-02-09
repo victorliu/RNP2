@@ -1415,7 +1415,7 @@ void GeneralizedEigenvectors(
 			xmax = rzero;
 			for(size_t jr = ibeg; jr < n; ++jr){
 				real_type nwj(Traits<T>::norm1(work[isrc+jr]));
-				if(nwj > xmax){ nwj = xmax; }
+				if(nwj > xmax){ xmax = nwj; }
 			}
 
 			if(xmax > safmin){

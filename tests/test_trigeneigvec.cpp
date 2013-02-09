@@ -48,7 +48,7 @@ void test_tri_eigvec(size_t n){
 		// Compute residual
 		real_type resid = RNP::BLAS::Norm1(n, work, 1) / (n*RNP::Traits<real_type>::eps());
 		if(resid > 30.){ std::cout << "bad" << std::endl; }
-		//std::cout << resid << std::endl;
+		std::cout << resid << std::endl;
 		
 		// A' * vl = conj(eval)*vl
 		RNP::BLAS::Copy(n, &vl[0+j*n], 1, work, 1);
@@ -60,7 +60,7 @@ void test_tri_eigvec(size_t n){
 		// Compute residual
 		resid = RNP::BLAS::Norm1(n, work, 1) / (n*RNP::Traits<real_type>::eps());
 		if(resid > 30.){ std::cout << "bad" << std::endl; }
-		//std::cout << resid << std::endl;
+		std::cout << resid << std::endl;
 		
 	}
 	
@@ -76,7 +76,7 @@ void test_tri_eigvec(size_t n){
 
 int main(){
 	srand(0);
-	const size_t n = 50;
+	const size_t n = 5;
 	test_tri_eigvec<double>(n);
 	test_tri_eigvec<std::complex<double> >(n);
 	return 0;
