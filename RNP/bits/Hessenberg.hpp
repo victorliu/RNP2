@@ -55,7 +55,8 @@ struct Tuning{
 //
 template <typename T>
 typename Traits<T>::real_type Norm(
-	const char *norm, size_t n, const T *a, size_t lda, T *work
+	const char *norm, size_t n, const T *a, size_t lda,
+	typename Traits<T>::real_type *work = NULL
 ){
 	typedef typename Traits<T>::real_type real_type;
 	
