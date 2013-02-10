@@ -23,6 +23,7 @@ TESTS = \
 	test_trieigvec \
 	test_trisolve \
 	test_triangular \
+	test_chol \
 	test_lu
 
 all: $(TESTS)
@@ -39,6 +40,8 @@ test_trigeneigvec: test_trigeneigvec.cpp
 	g++ -Wall test_trigeneigvec.cpp -I.. ../src/BLAS_mix.cpp $(LIBS) -o $@
 test_lu: test_lu.cpp
 	g++ $(CFLAGS) test_lu.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
+test_chol: test_chol.cpp
+	g++ $(CFLAGS) test_chol.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 test_qr_fat: test_qr_fat.cpp
 	g++ $(CFLAGS) test_qr_fat.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 test_qr_tall: test_qr_tall.cpp
