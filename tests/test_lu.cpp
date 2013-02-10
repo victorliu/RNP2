@@ -53,7 +53,7 @@ void test_lu(size_t m, size_t n, size_t nrhs,
 	const real_type Anorm = LA::MatrixNorm("1", m, n, A, lda);
 	
 	BLAS::Copy(m, n, A, lda, Afac, lda);
-	int info = LA::PLUFactor(m, n, Afac, lda, ipiv);
+	int info = LA::LU::Factor(m, n, Afac, lda, ipiv);
 	{ // Test 1: reconstruct matrix from factors
 		BLAS::Copy(m, n, Afac, lda, Ainv, lda);
 		size_t k = n;
@@ -73,7 +73,7 @@ void test_lu(size_t m, size_t n, size_t nrhs,
 				BLAS::MultTrV("L","N","U", k, Ainv, lda, &Ainv[0+k*lda], 1);
 			}
 		}
-		LA::ApplyPermutations("L","I", m, n, Ainv, lda, ipiv);
+		LA::ApplyPermutations("L","B", m, n, Ainv, lda, ipiv);
 		// Compute difference
 		for(size_t j = 0; j < n; ++j){
 			for(size_t i = 0; i < m; ++i){
@@ -95,9 +95,9 @@ void test_lu(size_t m, size_t n, size_t nrhs,
 			
 			size_t lwork = 0;
 			T *work = NULL;
-			LA::PLUInvert(n, Ainv, lda, ipiv, &lwork, work);
+			LA::LU::Invert(n, Ainv, lda, ipiv, &lwork, work);
 			work = new T[lwork];
-			LA::PLUInvert(n, Ainv, lda, ipiv, &lwork, work);
+			LA::LU::Invert(n, Ainv, lda, ipiv, &lwork, work);
 			delete [] work;
 			
 			const real_type Ainvnorm = LA::MatrixNorm("1", m, n, Ainv, lda);

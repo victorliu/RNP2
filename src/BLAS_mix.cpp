@@ -1,4 +1,4 @@
-#include <RNP/FBLAS.hpp>
+#include <RNP/BLAS/FBLAS.hpp>
 #include <RNP/Types.hpp>
 #include <cstring>
 #include <limits>

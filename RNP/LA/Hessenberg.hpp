@@ -3,9 +3,9 @@
 
 #include <cstddef>
 #include <RNP/BLAS.hpp>
-#include <RNP/bits/Rotation.hpp>
-#include <RNP/bits/Reflector.hpp>
-#include <RNP/bits/QR.hpp>
+#include <RNP/LA/Rotation.hpp>
+#include <RNP/LA/Reflector.hpp>
+#include <RNP/LA/QR.hpp>
 
 namespace RNP{
 namespace LA{
@@ -93,7 +93,7 @@ typename Traits<T>::real_type Norm(
 			for(size_t i = 0; i < n; ++i){
 				size_t jstart = 0; if(i > 0){ jstart = i-1; }
 				real_type sum = 0;
-				for(size_t j = 0; j < n; ++j){
+				for(size_t j = jstart; j < n; ++j){
 					sum += Traits<T>::abs(a[i+j*lda]);
 				}
 				if(!(sum < result)){ result = sum; }

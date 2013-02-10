@@ -1,25 +1,25 @@
 #ifndef RNP_LA_HPP_INCLUDED
 #define RNP_LA_HPP_INCLUDED
 
-#include "bits/Permutation.hpp"
-#include "bits/Reflector.hpp"
-#include "bits/Rotation.hpp"
-#include "bits/MatrixNorms.hpp"
-#include "bits/Triangular.hpp"
-#include "bits/Hessenberg.hpp"
+#include "LA/Permutation.hpp"
+#include "LA/Reflector.hpp"
+#include "LA/Rotation.hpp"
+#include "LA/MatrixNorms.hpp"
+#include "LA/Triangular.hpp"
+#include "LA/Hessenberg.hpp"
 
 // LU factorization
-#include "bits/LU.hpp"
-#include "bits/LU_obj.hpp"
+#include "LA/LU.hpp"
+#include "LA/LU_obj.hpp"
 
 // QR-like factorizations
-#include "bits/QR.hpp"
-#include "bits/LQ.hpp"
-#include "bits/QL.hpp" // rarely used
-#include "bits/RQ.hpp" // rarely used
+#include "LA/QR.hpp"
+#include "LA/LQ.hpp"
+#include "LA/QL.hpp" // rarely used
+#include "LA/RQ.hpp" // rarely used
 
-#include "bits/MatrixNormEstimates.hpp"
-#include "bits/Tridiagonal.hpp"
-#include "bits/Eigensystems.hpp"
+#include "LA/MatrixNormEstimates.hpp"
+#include "LA/Tridiagonal.hpp"
+#include "LA/Eigensystems.hpp"
 
 #endif // RNP_LA_HPP_INCLUDED

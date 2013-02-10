@@ -3,6 +3,7 @@ DEBUGLIB = /usr/lib/libduma.a -lpthread -llapack
 LIBS = -lblas $(DEBUGLIB)
 
 TESTS = \
+	test_zgeneig \
 	test_zeig \
 	test_hesstri_reduce \
 	test_hess_reduce \
@@ -23,6 +24,8 @@ TESTS = \
 	test_trisolve \
 	test_triangular \
 	test_lu
+
+all: $(TESTS)
 
 test_random: test_random.cpp
 	g++ -std=c++11 -Wall test_random.cpp -I.. -o $@
@@ -64,6 +67,8 @@ test_hesstri_reduce: test_hesstri_reduce.cpp
 	g++ $(CFLAGS) test_hesstri_reduce.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 test_zeig: test_zeig.cpp
 	g++ $(CFLAGS) test_zeig.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
+test_zgeneig: test_zgeneig.cpp
+	g++ $(CFLAGS) test_zgeneig.cpp ../src/BLAS_mix.cpp -I.. $(LIBS) -o $@
 #test_lu_obj: test_lu_obj.cpp
 #	g++ $(CFLAGS) test_lu_obj.cpp ../src/BLAS_mix.cpp -I.. -lblas -o $@
 #test_qr_load: test_qr_load.cpp

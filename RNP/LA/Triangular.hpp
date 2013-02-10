@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <RNP/Types.hpp>
 #include <RNP/BLAS.hpp>
+#include <RNP/LA/Rotation.hpp>
 #include <RNP/Debug.hpp>
 
 
@@ -26,6 +27,109 @@ template <typename T>
 struct Tuning{
 	static inline size_t invert_block_size(const char *uplo, const char *diag, size_t n){ return 64; }
 };
+
+/*
+///////////////////////////////////////////////////////////////////////
+// Norm
+// ----
+// Returns the value of the 1-norm, Frobenius norm, infinity norm, or
+// the  element of largest absolute value of a triangular matrix A.
+// Note that the maximum element magnitude is not a consistent
+// matrix norm.
+// Equivalent to Lapack routines _lantr.
+//
+// Arguments
+// norm Specifies which norm to return:
+//        If norm = "M", returns max(abs(A[i,j])).
+//        If norm = "1" or "O", returns norm1(A) (max column sum).
+//        If norm = "I", returns normInf(A) (max row sum).
+//        If norm = "F" or "E", returns normFrob(A).
+// n    Number of rows and columns of the matrix A.
+// a    Pointer to the first element of A.
+// lda  Leading dimension of the array containing A (lda >= n).
+// work Optional workspace of size n when norm = "I". If work = NULL,
+//      the norm is computed slightly less efficiently.
+//
+template <typename T>
+typename Traits<T>::real_type Norm(
+	const char *norm, const char *uplo, const char *diag,
+	size_t n, const T *a, size_t lda,
+	typename Traits<T>::real_type *work = NULL
+){ broken
+	typedef typename Traits<T>::real_type real_type;
+	
+	RNPAssert(NULL != norm);
+	RNPAssert(
+		'M' == norm[0] || '1' == norm[0] || 'O' == norm[0] ||
+		'I' == norm[0] || 'F' == norm[0] || 'E' == norm[0]
+	);
+	RNPAssert(NULL != a);
+	RNPAssert(lda >= n);
+	
+	const real_type rzero(0);
+	if(n < 1){ return rzero; }
+	real_type result(0);
+	if('M' == norm[0]){ // max(abs(A(i,j)))
+		for(size_t j = 0; j < n; ++j){
+			size_t ilimit = j+2; if(n < ilimit){ ilimit = n; }
+			for(size_t i = 0; i < ilimit; ++i){
+				real_type ca = Traits<T>::abs(a[i+j*lda]);
+				if(!(ca < result)){ result = ca; }
+			}
+		}
+	}else if('O' == norm[0] || '1' == norm[0]){ // max col sum
+		for(size_t j = 0; j < n; ++j){
+			size_t ilimit = j+2; if(n < ilimit){ ilimit = n; }
+			real_type sum(0);
+			for(size_t i = 0; i < ilimit; ++i){
+				sum += Traits<T>::abs(a[i+j*lda]);
+			}
+			if(!(sum < result)){ result = sum; }
+		}
+	}else if('I' == norm[0]){ // max row sum
+		if(NULL == work){ // can't accumulate row sums
+			for(size_t i = 0; i < n; ++i){
+				size_t jstart = 0; if(i > 0){ jstart = i-1; }
+				real_type sum = 0;
+				for(size_t j = 0; j < n; ++j){
+					sum += Traits<T>::abs(a[i+j*lda]);
+				}
+				if(!(sum < result)){ result = sum; }
+			}
+		}else{ // accumulate row sums in a cache-friendlier traversal order
+			for(size_t i = 0; i < n; ++i){ work[i] = 0; }
+			for(size_t j = 0; j < n; ++j){
+				size_t ilimit = j+2; if(n < ilimit){ ilimit = n; }
+				for(size_t i = 0; i < ilimit; ++i){
+					work[i] += Traits<T>::abs(a[i+j*lda]);
+				}
+			}
+			for(size_t i = 0; i < n; ++i){
+				if(!(work[i] < result)){ result = work[i]; }
+			}
+		}
+	}else if('F' == norm[0] || 'E' == norm[0]){ // Frobenius norm
+		real_type scale = 0;
+		real_type sum = 1;
+		for(size_t j = 0; j < n; ++j){
+			size_t ilimit = j+2; if(n < ilimit){ ilimit = n; }
+			real_type sum = 0;
+			for(size_t i = 0; i < ilimit; ++i){
+				real_type ca = Traits<T>::abs(a[i+j*lda]);
+				if(scale < ca){
+					real_type r = scale/ca;
+					sum = real_type(1) + sum*r*r;
+					scale = ca;
+				}else{
+					real_type r = ca/scale;
+					sum += r*r;
+				}
+			}
+		}
+		result = scale*sqrt(sum);
+	}
+	return result;
+}*/
 
 ///////////////////////////////////////////////////////////////////////
 // Invert_unblocked

@@ -1,6 +1,6 @@
 #include <RNP/LA.hpp>
 #include <RNP/BLAS.hpp>
-#include <RNP/bits/Hessenberg.hpp>
+#include <RNP/LA/Hessenberg.hpp>
 #include <RNP/IOBasic.hpp>
 #include <iostream>
 #include <cstdlib>

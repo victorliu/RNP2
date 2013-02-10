@@ -1,6 +1,6 @@
 #include <ctime>
 #include <iostream>
-#include <RNP/bits/ComplexEigensystem.hpp>
+#include <RNP/LA/Eigensystems.hpp>
 #include <RNP/Random.hpp>
 #include "nep/read_mm.hpp"
 

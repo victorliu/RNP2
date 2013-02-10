@@ -10,11 +10,11 @@
 //
 
 // Select this line to use external BLAS
-//#include "bits/BLAS_ext.hpp"
+//#include "BLAS/BLAS_ext.hpp"
 
 // Select this line to use a mixture of templates and external BLAS
-#include "bits/BLAS_mix.hpp"
+#include "BLAS/BLAS_mix.hpp"
 
-#include "bits/BLAS_obj.hpp"
+#include "BLAS/BLAS_obj.hpp"
 
 #endif // RNP_BLAS_HPP_INCLUDED

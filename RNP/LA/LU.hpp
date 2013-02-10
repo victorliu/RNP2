@@ -81,7 +81,7 @@ int Factor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 	static const size_t nb = LU::Tuning<T>::factor_block_size(m, n);
 	const size_t min_dim = (m < n ? m : n);
 	if(min_dim <= nb || nb <= 1){
-		return PLUFactor_unblocked(m, n, a, lda, pivots);
+		return Factor_unblocked(m, n, a, lda, pivots);
 	}
 	// Use blocked code
 	int info = 0;
@@ -89,7 +89,7 @@ int Factor(size_t m, size_t n, T *a, size_t lda, size_t *pivots){
 		// Size of the block
 		const size_t jb = (min_dim < nb+j ? min_dim-j : nb);
 		// Factor the diagonal and subdiagonal blocks
-		int iinfo = PLUFactor_unblocked(m-j, jb, &a[j+j*lda], lda, &pivots[j]);
+		int iinfo = Factor_unblocked(m-j, jb, &a[j+j*lda], lda, &pivots[j]);
 		if(0 == info && iinfo > 0){ // Adjust info
 			info = iinfo + j;
 		}

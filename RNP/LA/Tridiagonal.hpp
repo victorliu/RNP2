@@ -1,10 +1,12 @@
 #ifndef RNP_TRIDIAGONAL_HPP_INCLUDED
 #define RNP_TRIDIAGONAL_HPP_INCLUDED
 
-#include <cstddef>
-#include <RNP/bits/Reflector.hpp>
-#include <RNP/bits/Rotation.hpp>
+#include <RNP/Types.hpp>
 #include <RNP/BLAS.hpp>
+#include <RNP/LA/Reflector.hpp>
+#include <RNP/LA/Rotation.hpp>
+#include <RNP/LA/QR.hpp>
+#include <RNP/LA/QL.hpp>
 #include <RNP/Debug.hpp>
 
 namespace RNP{
