@@ -153,7 +153,7 @@ int GeneralizedSchurReduce(
 	bool wantSchur,
 	size_t n, size_t ilo, size_t ihi,
 	std::complex<T> *h, size_t ldh, std::complex<T> *t, size_t ldt,
-	std::complex<T> *alpha, std::complex<T> *beta,
+	std::complex<T> *alpha, T *beta,
 	std::complex<T> *q, size_t ldq, std::complex<T> *z, size_t ldz
 ){
 	typedef std::complex<T> complex_type;
@@ -166,7 +166,7 @@ int GeneralizedSchurReduce(
     if(0 == n){
 		return 0;
     }
-
+	
 	// Machine Constants
     const size_t in = ihi - ilo;
     const real_type safmin(real_traits::min());
@@ -178,7 +178,6 @@ int GeneralizedSchurReduce(
     const real_type ascale(real_type(1) / (safmin > anorm ? safmin : anorm));
     const real_type bscale(real_type(1) / (safmin > bnorm ? safmin : bnorm));
     
-	
 	// Set Eigenvalues ihi:n
 
 	for(size_t j = ihi; j < n; ++j){
@@ -199,7 +198,7 @@ int GeneralizedSchurReduce(
 			t[j+j*ldt] = zero;
 		}
 		alpha[j] = h[j+j*ldh];
-		beta[j] = t[j+j*ldt];
+		beta[j] = t[j+j*ldt].real();
     }
 	
     if(ihi >= ilo){
@@ -226,12 +225,11 @@ int GeneralizedSchurReduce(
 		int iiter = 0;
 		complex_type eshift(real_type(0));
 		const size_t maxit = (ihi - ilo) * 30;
-		bool converged = true;
+		bool converged = false;
 		
 
 		for(size_t jiter = 0; jiter < maxit; ++jiter){
 			// Split the matrix if possible.
-
 			bool is_tzero = false;
 			bool is_hzero = false;
 			// Two tests:
@@ -388,7 +386,7 @@ int GeneralizedSchurReduce(
 			
 			// H(ILAST,ILAST-1)=0 -- Standardize B, set ALPHA and BETA
 			if(is_hzero){
-				real_type absb = complex_traits::abs(t[ilast+ ilast*ldt]);
+				real_type absb = complex_traits::abs(t[ilast+ilast*ldt]);
 				if(absb > safmin){
 					complex_type signbc = std::conj(t[ilast+ilast*ldt]/absb);
 
@@ -406,7 +404,7 @@ int GeneralizedSchurReduce(
 					t[ilast+ilast*ldt] = zero;
 				}
 				alpha[ilast] = h[ilast+ilast*ldh];
-				beta [ilast] = t[ilast+ilast*ldt];
+				beta [ilast] = t[ilast+ilast*ldt].real();
 
 				// Go to next block -- exit if finished.
 				if(ilast <= ilo){
@@ -454,7 +452,7 @@ int GeneralizedSchurReduce(
 			t[j+j*ldt] = zero;
 		}
 		alpha[j] = h[j+j*ldh];
-		beta [j] = t[j+j*ldt];
+		beta [j] = t[j+j*ldt].real();
 	}
 
 	// Normal Termination
