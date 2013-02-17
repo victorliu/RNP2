@@ -676,9 +676,8 @@ void ReduceGeneralized_unblocked(
 	}
 
 	// Reduce A and B
-	for(size_t jcol = ilo; jcol+3 <= ihi; ++jcol){
-		size_t jrow = ihi;
-		while(jrow --> jcol+2){
+	for(size_t jcol = ilo; jcol+2 < ihi; ++jcol){
+		for(size_t jrow = ihi; jrow-- > jcol+2; ){
 			typename Traits<T>::real_type c;
 			T s, ctemp;
 			
