@@ -295,89 +295,81 @@ void BalanceUndo(
 
 } // namespace NonsymmetricGeneralizedEigensystem
 
-// Computes for a pair of N-by-N complex nonsymmetric matrices (A,B),
+
+///////////////////////////////////////////////////////////////////////
+// ComplexGeneralizedEigensystem
+// -----------------------------
+// Computes for a pair of n-by-n complex nonsymmetric matrices (A,B),
 // the generalized eigenvalues, and optionally, the left and/or right
 // generalized eigenvectors.
-
+//
 // A generalized eigenvalue for a pair of matrices (A,B) is a scalar
 // lambda or a ratio alpha/beta = lambda, such that A - lambda*B is
 // singular. It is usually represented as the pair (alpha,beta), as
 // there is a reasonable interpretation for beta=0, and even for both
 // being zero.
-
-// The right generalized eigenvector v(j) corresponding to the
+//
+// The right generalized eigenvector v[j] corresponding to the
 // generalized eigenvalue lambda(j) of (A,B) satisfies
-//              A * v(j) = lambda(j) * B * v(j).
-// The left generalized eigenvector u(j) corresponding to the
+//              A * v[j] = lambda[j] * B * v[j].
+// The left generalized eigenvector u[j] corresponding to the
 // generalized eigenvalues lambda(j) of (A,B) satisfies
-//              u(j)^H * A = lambda(j) * u(j)^H * B
-// where u(j)^H is the conjugate-transpose of u(j).
-
+//              u[j]^H * A = lambda[j] * u[j]^H * B
+// where u[j]^H is the conjugate-transpose of u[j].
+//
+// Returns 0 on a successful exit. A negative return value of -i means
+// the i-th argument had an illegal value. If the return value is
+// positive in the range i=1:n+1, then the QZ iteration failed.  No
+// eigenvectors have been calculated, but alpha[j] and beta[j] should
+// be correct for j=i:n. Any other value signifies some other QZ
+// iteration failure.
+//
 // Arguments
-// =========
-
-// N       The order of the matrices A, B, VL, and VR.  N >= 0.
-// A       (input/output) COMPLEX*16 array, dimension (LDA, N)
-//         On entry, the matrix A in the pair (A,B).
-//         On exit, A has been overwritten.
-// LDA     The leading dimension of A.  LDA >= max(1,N).
-// B       (input/output) COMPLEX*16 array, dimension (LDB, N)
-//         On entry, the matrix B in the pair (A,B).
-//         On exit, B has been overwritten.
-// LDB     The leading dimension of B.  LDB >= max(1,N).
-
-// ALPHA   (output) COMPLEX*16 array, dimension (N)
-// BETA    (output) COMPLEX*16 array, dimension (N)
-//         On exit, ALPHA(j)/BETA(j), j=1,...,N, will be the
-//         generalized eigenvalues.
-
-//         Note: the quotients ALPHA(j)/BETA(j) may easily over- or
-//         underflow, and BETA(j) may even be zero.  Thus, the user
-//         should avoid naively computing the ratio alpha/beta.
-//         However, ALPHA will be always less than and usually
-//         comparable with norm(A) in magnitude, and BETA always less
-//         than and usually comparable with norm(B).
-
-// VL      (output) COMPLEX*16 array, dimension (LDVL,N)
-//         If VL != NULL, the left generalized eigenvectors u(j) are
-//         stored one after another in the columns of VL, in the same
-//         order as their eigenvalues.
-//         Each eigenvector is scaled so the largest component has
-//         abs(real part) + abs(imag. part) = 1.
-// LDVL    The leading dimension of the matrix VL. LDVL >= 1, and
-//         if VL != NULL, LDVL >= N.
-
-// VR      (output) COMPLEX*16 array, dimension (LDVR,N)
-//         If VR != NULL, the right generalized eigenvectors v(j) are
-//         stored one after another in the columns of VR, in the same
-//         order as their eigenvalues.
-//         Each eigenvector is scaled so the largest component has
-//         abs(real part) + abs(imag. part) = 1.
-// LDVR    The leading dimension of the matrix VR. LDVR >= 1, and
-//         if VR != NULL, LDVR >= N.
-
-// WORK    (workspace/output) COMPLEX*16 array, dimension (MAX(1,2*N))
-// iwork   (workspace/output) int array, dimension (2*N)
-
-// return: = 0:  successful exit
-//         < 0:  if INFO = -i, the i-th argument had an illegal value.
-//         =1,...,N:
-//               The QZ iteration failed.  No eigenvectors have been
-//               calculated, but ALPHA(j) and BETA(j) should be
-//               correct for j=INFO+1,...,N.
-//         =N+1: other QZ iteration failure
+// n     The number of rows and columns of A and B.
+// a     Pointer to the first element of A.
+//       On exit, A has been overwritten.
+// lda   The leading dimension of the array containing A, lda >= n.
+// b     Pointer to the first element of B.
+//       On exit, B has been overwritten.
+// ldb   The leading dimension of the array containing B, ldb >= n.
+// alpha On exit, alpha[j]/beta[j], j=0:n will be the generalized
+// beta  eigenvalues.
+//       Note: the quotients alpha[j]/beta[j] may easily over- or
+//       underflow, and beta[j] may even be zero.  Thus, the user
+//       should avoid naively computing the ratio alpha/beta.
+//       However, alpha will be always less than and usually
+//       comparable with norm(A) in magnitude, and beta always less
+//       than and usually comparable with norm(B).
+//       Beta is guaranteed to be non-negative.
+// vl    If vl != NULL, the left generalized eigenvectors u[j] are
+//       stored one after another in the columns of vl, in the same
+//       order as their eigenvalues. They are not normalized.
+// ldvl  The leading dimension of the array containing vl.
+//       If vl != NULL, ldvl >= n.
+// vr    If vr != NULL, the right generalized eigenvectors v[j] are
+//       stored one after another in the columns of vr, in the same
+//       order as their eigenvalues. They are not normalized.
+// ldvr  The leading dimension of the array containing vr.
+//       If vr != NULL, ldvr >= n.
+// lwork Length of workspace work. At least 3*n if any eigenvectors
+//       are desired. Otherwise, 2*n is the minimum. Set to zero to
+//       query the optimal size, returned in lwork.
+// work  Workspace of size lwork.
+// iwork Integer workspace of size 2*n.
+//
+template <typename T>
 int ComplexGeneralizedEigensystem(size_t n, 
-	std::complex<double> *a, size_t lda, std::complex<double> *b, size_t ldb, 
-	std::complex<double> *alpha, std::complex<double> *beta,
-	std::complex<double> *vl, size_t ldvl, std::complex<double> *vr, size_t ldvr,
-	size_t *lwork, std::complex<double> *work, int *iwork
+	std::complex<T> *a, size_t lda, std::complex<T> *b, size_t ldb, 
+	std::complex<T> *alpha, T *beta,
+	std::complex<T> *vl, size_t ldvl, std::complex<T> *vr, size_t ldvr,
+	size_t *lwork, std::complex<T> *work, int *iwork
 ){
-	typedef std::complex<double> complex_type;
-	typedef double real_type;
+	typedef std::complex<T> complex_type;
+	typedef T real_type;
 	
 	static const complex_type one(real_type(1));
 	static const complex_type zero(real_type(0));
-	static const char *balancejob = "B";
+	static const char *balancejob = "P";
 	
 	using namespace std;
 	
@@ -394,7 +386,7 @@ int ComplexGeneralizedEigensystem(size_t n,
 	//     2n real  2n
 	// Therefore, n+max(2n,factor,multQ,genQ) is recommended,
 	// and 3n is the minimum when eigenvectors are wanted.
-	// If only eigenvalues are wanted, then n is the minimum.
+	// If only eigenvalues are wanted, then 2n is the minimum.
 	
 	if(0 == n){
 		return 0;
@@ -419,9 +411,9 @@ int ComplexGeneralizedEigensystem(size_t n,
 		return 0;
 	}
 
-	const double eps = std::numeric_limits<double>::epsilon() * 2;
-	const double smlnum = sqrt(std::numeric_limits<double>::min()) / eps;
-	const double bignum = 1. / smlnum;
+	const real_type eps = real_type(2) * Traits<real_type>::eps();
+	const real_type smlnum = sqrt(Traits<real_type>::min()) / eps;
+	const real_type bignum = real_type(1) / smlnum;
 
 	// Scale A if max element outside range [SMLNUM,BIGNUM]
 	real_type anrm = MatrixNorm("M", n, n, a, lda);
@@ -483,6 +475,8 @@ int ComplexGeneralizedEigensystem(size_t n,
 
 	// Reduce to generalized Hessenberg form
 	Hessenberg::ReduceGeneralized_unblocked(n, ilo, ihi, a, lda, b, ldb, vl, ldvl, vr, ldvr);
+	int info;
+	//zgghrd_(NULL != vl ? "V" : "N", NULL != vr ? "V" : "N", n, ilo+1, ihi, a, lda, b, ldb, vl, (1 > ldvl ? 1 : ldvl), vr, (1 > ldvr ? 1 : ldvr), &info);
 
 	int ierr = HessenbergQZ::GeneralizedSchurReduce(
 		(NULL != vl || NULL != vr), n, ilo, ihi, a, lda, b, ldb, alpha, beta,
