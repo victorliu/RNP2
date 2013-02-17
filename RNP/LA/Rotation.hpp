@@ -33,10 +33,10 @@ void Generate(
 ){
 	typedef typename Traits<T>::real_type real_type;
 
-	const real_type safmin = Traits<real_type>::min();
-	const real_type eps    = Traits<real_type>::eps();
-	const real_type safmn2 = sqrt(safmin/eps);
-	const real_type safmx2 = real_type(1) / safmn2;
+	static const real_type safmin = Traits<real_type>::min();
+	static const real_type eps    = Traits<real_type>::eps();
+	static const real_type safmn2 = sqrt(safmin/eps);
+	static const real_type safmx2 = real_type(1) / safmn2;
 	
 	real_type aif = Traits<T>::norminf(f);
 	real_type aig = Traits<T>::norminf(g);
@@ -51,11 +51,11 @@ void Generate(
 			fs *= safmn2;
 			gs *= safmn2;
 			scale *= safmn2;
-		}while(scale >= safmx2 && scale <= Traits<real_type>::max());
+		}while(scale >= safmx2);
 	}else if(scale <= safmn2){
 		if(T(0) == g){
 			*cs = real_type(1);
-			*sn = 0;
+			*sn = T(0);
 			*r = f;
 			return;
 		}
@@ -64,7 +64,7 @@ void Generate(
 			fs *= safmx2;
 			gs *= safmx2;
 			scale *= safmx2;
-		}while(scale <= safmn2 && scale <= Traits<real_type>::max());
+		}while(scale <= safmn2);
 	}
 	real_type f2 = Traits<T>::abs2(fs);
 	real_type g2 = Traits<T>::abs2(gs);
@@ -77,11 +77,11 @@ void Generate(
 			// Do complex/real division explicitly with real divisions
 			{
 				real_type absgs(Traits<T>::abs(gs));
-				*sn = gs / absgs;
+				*sn = Traits<T>::conj(gs) / absgs;
 			}
 			return;
 		}
-		real_type f2s = abs(fs);
+		real_type f2s = Traits<T>::abs(fs);
 		// g2 and g2s are accurate
 		// g2 is at least safmin, and g2s is at least safmn2
 		real_type g2s = sqrt(g2);
